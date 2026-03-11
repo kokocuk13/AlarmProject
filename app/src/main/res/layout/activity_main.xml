@@ -1,42 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.fragment.app.FragmentContainerView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_host_fragment"
+    android:name="androidx.navigation.fragment.NavHostFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="32dp"
-    android:background="#F5F5F5">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="⏰ AlarmProject"
-        android:textSize="30sp"
-        android:textStyle="bold"
-        android:textColor="#1A237E"
-        android:layout_marginBottom="48dp" />
-
-    <TextView
-        android:id="@+id/statusText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Нажмите кнопку чтобы установить будильник"
-        android:textSize="16sp"
-        android:gravity="center"
-        android:textColor="#424242"
-        android:layout_marginBottom="32dp"
-        android:padding="16dp"
-        android:background="#FFFFFF" />
-
-    <Button
-        android:id="@+id/saveButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Установить будильник"
-        android:textSize="16sp"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp" />
-
-</LinearLayout>
+    app:navGraph="@navigation/nav_graph"
+    app:defaultNavHost="true" />
