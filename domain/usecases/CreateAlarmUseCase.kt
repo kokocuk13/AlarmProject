@@ -21,7 +21,7 @@ class CreateAlarmUseCase(
         val alarm = Alarm(
             time = params.time,
             isEnabled = true,
-            task = ShakeTask(requiredShakes = params.difficultyLevel)
+            task = ShakeTask(requiredShakes = params.difficultyLevel, isCompleted = false)
         )
 
         val result = repository.saveAlarm(alarm)
