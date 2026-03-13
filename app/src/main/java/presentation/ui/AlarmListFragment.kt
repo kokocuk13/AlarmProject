@@ -1,5 +1,6 @@
 package presentation.ui
 
+import androidx.recyclerview.widget.DiffUtil
 import android.graphics.Canvas
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -120,11 +121,25 @@ class AlarmAdapter(
 
     private val alarms = mutableListOf<Alarm>()
 
-    /** Обновляет весь список будильников и перерисовывает RecyclerView. */
+    /** Обновляет список будильников с анимацией через DiffUtil. */
     fun updateAlarms(newAlarms: List<Alarm>) {
+        val diffResult = DiffUtil.calculateDiff(AlarmDiffCallback(alarms, newAlarms))
         alarms.clear()
         alarms.addAll(newAlarms)
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
+    }
+
+    /** DiffUtil callback для вычисления минимального числа изменений в списке. */
+    private class AlarmDiffCallback(
+        private val oldList: List<Alarm>,
+        private val newList: List<Alarm>
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize() = oldList.size
+        override fun getNewListSize() = newList.size
+        override fun areItemsTheSame(oldPos: Int, newPos: Int) =
+            oldList[oldPos].id == newList[newPos].id
+        override fun areContentsTheSame(oldPos: Int, newPos: Int) =
+            oldList[oldPos] == newList[newPos]
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
