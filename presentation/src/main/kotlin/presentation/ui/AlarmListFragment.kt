@@ -1,8 +1,7 @@
+// Реализация перемещена в модуль app.
+// Файл: app/src/main/java/presentation/ui/AlarmListFragment.kt
 package presentation.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
