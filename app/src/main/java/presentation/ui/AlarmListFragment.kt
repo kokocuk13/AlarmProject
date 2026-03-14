@@ -55,7 +55,7 @@ class AlarmListFragment : Fragment() {
         )
         recyclerView.adapter = adapter
 
-        // Свайп влево — открывает кнопку удаления
+        // Свайп влево — удаляет будильник
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             override fun onMove(
                 rv: RecyclerView,
@@ -64,7 +64,17 @@ class AlarmListFragment : Fragment() {
             ) = false
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                // Сдвиг обрабатывается через onChildDraw; удаление — по нажатию кнопки
+                val position = viewHolder.adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    viewModel.deleteAlarm(adapter.getAlarmAt(position))
+                }
+            }
+
+            // Обязателен при использовании getDefaultUIUtil() на foregroundView:
+            // без этого карточка зависает в сдвинутом положении после окончания свайпа
+            override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
+                val foreground = (viewHolder as AlarmAdapter.ViewHolder).foregroundView
+                getDefaultUIUtil().clearView(foreground)
             }
 
             override fun onChildDraw(
@@ -120,6 +130,9 @@ class AlarmAdapter(
 ) : RecyclerView.Adapter<AlarmAdapter.ViewHolder>() {
 
     private val alarms = mutableListOf<Alarm>()
+
+    /** Возвращает будильник по позиции в текущем списке. */
+    fun getAlarmAt(position: Int): Alarm = alarms[position]
 
     /** Обновляет список будильников с анимацией через DiffUtil. */
     fun updateAlarms(newAlarms: List<Alarm>) {

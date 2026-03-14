@@ -56,19 +56,29 @@ class AndroidAlarmScheduler(
     }
 
     override fun cancel(alarm: Alarm) {
-        // FLAG_NO_CREATE возвращает null, если PendingIntent не существует
-        val pendingIntent = buildPendingIntent(alarm, PendingIntent.FLAG_NO_CREATE)
-        pendingIntent?.let { alarmManager.cancel(it) }
+        val intent = Intent(context, receiverClass)
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            alarm.id.toInt(),
+            intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        pendingIntent?.let {
+            alarmManager.cancel(it)
+        }
     }
 
-    private fun buildPendingIntent(alarm: Alarm, flags: Int): PendingIntent? {
+    private fun buildPendingIntent(alarm: Alarm, flags: Int): PendingIntent {
         val intent = Intent(context, receiverClass).apply {
             putExtra("ALARM_ID", alarm.id)
             putExtra("ALARM_NAME", alarm.name ?: "Будильник")
         }
+
         return PendingIntent.getBroadcast(
             context,
-            alarm.id.toInt(), // requestCode уникален благодаря id из БД
+            alarm.id.toInt(),
             intent,
             flags or PendingIntent.FLAG_IMMUTABLE
         )

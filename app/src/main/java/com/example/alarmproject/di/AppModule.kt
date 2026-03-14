@@ -4,8 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.alarmproject.receiver.AlarmReceiver
-import data.db.AlarmDatabase
-import data.repository.AlarmRepositoryImpl
+import data.di.DataModule
 import data.scheduler.AndroidAlarmScheduler
 import domain.repository.IAlarmRepository
 import domain.scheduler.IAlarmScheduler
@@ -30,19 +29,14 @@ object AppModule {
         appContext = context.applicationContext
     }
 
-    // Room база данных (синглтон)
-    private val database: AlarmDatabase by lazy {
-        AlarmDatabase.getInstance(appContext)
-    }
-
     // Планировщик через AlarmManager
     private val scheduler: IAlarmScheduler by lazy {
         AndroidAlarmScheduler(appContext, AlarmReceiver::class.java)
     }
 
-    // Репозиторий с реальной Room-базой
+    // Репозиторий с реальной Room-базой (AlarmDatabase скрыта внутри :data)
     private val repository: IAlarmRepository by lazy {
-        AlarmRepositoryImpl(database.alarmDao())
+        DataModule.provideRepository(appContext)
     }
 
     // Use cases
