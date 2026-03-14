@@ -21,11 +21,13 @@ class AlarmSetupViewModel(private val createAlarmUseCase: CreateAlarmUseCase) : 
     private val _uiState = MutableStateFlow<AlarmUiState>(AlarmUiState.Idle)
     val uiState = _uiState.asStateFlow()
 
-    fun save(time: LocalTime, shakes: Int) {
+    fun save(time: LocalTime, shakes: Int, name: String = "Будильник") {
         viewModelScope.launch {
             _uiState.value = AlarmUiState.Loading
-            val params = CreateAlarmParams(time, shakes)
+
+            val params = CreateAlarmParams(time, shakes, name)
             val result = createAlarmUseCase.invoke(params)
+
             _uiState.value = if (result.isSuccess) {
                 AlarmUiState.Success
             } else {
