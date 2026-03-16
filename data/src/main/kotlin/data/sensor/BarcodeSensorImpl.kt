@@ -21,6 +21,7 @@ class BarcodeSensorImpl(
     private var onScanned: ((String) -> Unit)? = null
     private var cameraProvider: ProcessCameraProvider? = null
     private val executor = Executors.newSingleThreadExecutor()
+    private val scanner = BarcodeScanning.getClient()
 
     override fun start(onScanned: (String) -> Unit) {
         this.onScanned = onScanned
@@ -49,6 +50,7 @@ class BarcodeSensorImpl(
 
     override fun stop() {
         cameraProvider?.unbindAll()
+        scanner.close()
         onScanned = null
         executor.shutdownNow()
     }
@@ -60,7 +62,6 @@ class BarcodeSensorImpl(
         }
 
         val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-        val scanner = BarcodeScanning.getClient()
 
         scanner.process(image)
             .addOnSuccessListener { barcodes ->
