@@ -1,32 +1,36 @@
 package presentation.ui
 
+import androidx.recyclerview.widget.DiffUtil
 import android.graphics.Canvas
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.navigation.fragment.findNavController
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.example.alarmproject.R
-import androidx.appcompat.widget.SwitchCompat
-import androidx.recyclerview.widget.ItemTouchHelper
+import com.example.alarmproject.di.AppModule
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import domain.models.Alarm
-import java.time.LocalTime
-import domain.models.ShakeTask
+import kotlinx.coroutines.launch
+import presentation.viewmodels.AlarmListViewModel
 
 class AlarmListFragment : Fragment() {
 
+    private val viewModel: AlarmListViewModel by viewModels {
+        AppModule.provideAlarmListViewModelFactory()
+    }
+
     private lateinit var adapter: AlarmAdapter
-    private val mockAlarms = mutableListOf(
-        Alarm(LocalTime.of(7, 0), true, ShakeTask(10, false), "Зачет"),
-        Alarm(LocalTime.of(10, 0), true, ShakeTask(20, false), "Вторая пара"),
-        Alarm(LocalTime.of(12, 0), false, ShakeTask(5, false), "Таблетки"),
-        Alarm(LocalTime.of(15, 0), false, ShakeTask(15, false), "В деканат")
-    )
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,53 +48,70 @@ class AlarmListFragment : Fragment() {
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        adapter = AlarmAdapter(mockAlarms, 
-            onItemClick = { alarm ->
-                val bundle = Bundle().apply {
-                    putInt("hour", alarm.time.hour)
-                    putInt("minute", alarm.time.minute)
-                    putString("name", alarm.name)
-                }
-                findNavController().navigate(R.id.action_home_to_ringing, bundle)
-            },
-            onDeleteClick = { position ->
-                mockAlarms.removeAt(position)
-                adapter.notifyItemRemoved(position)
-                updateEmptyState(emptyText, recyclerView)
+        adapter = AlarmAdapter(
+            onDeleteClick = { alarm ->
+                viewModel.deleteAlarm(alarm)
             }
         )
         recyclerView.adapter = adapter
 
+        // Свайп влево — удаляет будильник
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-            override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
-            
+            override fun onMove(
+                rv: RecyclerView,
+                vh: RecyclerView.ViewHolder,
+                t: RecyclerView.ViewHolder
+            ) = false
+
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                // В этой реализации мы не удаляем сразу по свайпу, 
-                // а даем ItemTouchHelper отрисовать задний план.
-                // Но так как нам нужно нажать на кнопку, мы просто сдвигаем контент.
+                val position = viewHolder.adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    viewModel.deleteAlarm(adapter.getAlarmAt(position))
+                }
+            }
+
+            // Обязателен при использовании getDefaultUIUtil() на foregroundView:
+            // без этого карточка зависает в сдвинутом положении после окончания свайпа
+            override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
+                val foreground = (viewHolder as AlarmAdapter.ViewHolder).foregroundView
+                getDefaultUIUtil().clearView(foreground)
             }
 
             override fun onChildDraw(
-                c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
-                dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float, dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
             ) {
-                val foregroundView = (viewHolder as AlarmAdapter.ViewHolder).foregroundView
-                // Ограничиваем свайп шириной кнопки удаления (примерно 80dp)
-                val translationX = if (dX < -300f) -300f else dX
-                getDefaultUIUtil().onDraw(c, recyclerView, foregroundView, translationX, dY, actionState, isCurrentlyActive)
+                val foreground = (viewHolder as AlarmAdapter.ViewHolder).foregroundView
+                // Ограничиваем ход свайпа шириной кнопки удаления
+                val limitedDX = if (dX < -300f) -300f else dX
+                getDefaultUIUtil().onDraw(
+                    c, recyclerView, foreground, limitedDX, dY, actionState, isCurrentlyActive
+                )
             }
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(recyclerView)
 
-        updateEmptyState(emptyText, recyclerView)
+        // Наблюдаем за живым списком будильников из Room
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.alarms.collect { alarms ->
+                    adapter.updateAlarms(alarms)
+                    updateEmptyState(emptyText, recyclerView, alarms)
+                }
+            }
+        }
 
         fab.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_setup)
         }
     }
 
-    private fun updateEmptyState(emptyText: View, recyclerView: View) {
-        if (mockAlarms.isEmpty()) {
+    private fun updateEmptyState(emptyText: View, recyclerView: View, alarms: List<Alarm>) {
+        if (alarms.isEmpty()) {
             emptyText.visibility = View.VISIBLE
             recyclerView.visibility = View.GONE
         } else {
@@ -100,11 +121,39 @@ class AlarmListFragment : Fragment() {
     }
 }
 
+/**
+ * Адаптер для списка будильников.
+ * Поддерживает обновление списка через [updateAlarms] и удаление по нажатию кнопки.
+ */
 class AlarmAdapter(
-    private val alarms: List<Alarm>,
-    private val onItemClick: (Alarm) -> Unit,
-    private val onDeleteClick: (Int) -> Unit
+    private val onDeleteClick: (Alarm) -> Unit
 ) : RecyclerView.Adapter<AlarmAdapter.ViewHolder>() {
+
+    private val alarms = mutableListOf<Alarm>()
+
+    /** Возвращает будильник по позиции в текущем списке. */
+    fun getAlarmAt(position: Int): Alarm = alarms[position]
+
+    /** Обновляет список будильников с анимацией через DiffUtil. */
+    fun updateAlarms(newAlarms: List<Alarm>) {
+        val diffResult = DiffUtil.calculateDiff(AlarmDiffCallback(alarms, newAlarms))
+        alarms.clear()
+        alarms.addAll(newAlarms)
+        diffResult.dispatchUpdatesTo(this)
+    }
+
+    /** DiffUtil callback для вычисления минимального числа изменений в списке. */
+    private class AlarmDiffCallback(
+        private val oldList: List<Alarm>,
+        private val newList: List<Alarm>
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize() = oldList.size
+        override fun getNewListSize() = newList.size
+        override fun areItemsTheSame(oldPos: Int, newPos: Int) =
+            oldList[oldPos].id == newList[newPos].id
+        override fun areContentsTheSame(oldPos: Int, newPos: Int) =
+            oldList[oldPos] == newList[newPos]
+    }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val foregroundView: View = view.findViewById(R.id.foreground_view)
@@ -125,11 +174,8 @@ class AlarmAdapter(
         holder.timeText.text = String.format("%02d:%02d", alarm.time.hour, alarm.time.minute)
         holder.nameText.text = alarm.name ?: "Будильник"
         holder.switch.isChecked = alarm.isEnabled
-        
-        holder.foregroundView.setOnClickListener { onItemClick(alarm) }
-        holder.deleteBackground.setOnClickListener { 
-            onDeleteClick(holder.adapterPosition)
-        }
+        // Кнопка удаления на заднем плане (появляется при свайпе)
+        holder.deleteBackground.setOnClickListener { onDeleteClick(alarm) }
     }
 
     override fun getItemCount() = alarms.size
