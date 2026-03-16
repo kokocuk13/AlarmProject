@@ -16,9 +16,10 @@ class ShakeSensorImpl(
 
     override fun start(onShake: () -> Unit) {
         this.onShake = onShake
+        val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) ?: return
         sensorManager.registerListener(
             this,
-            sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+            accelerometer,
             SensorManager.SENSOR_DELAY_UI
         )
     }
