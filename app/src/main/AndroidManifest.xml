@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Разрешение на точный будильник (API 31+) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <!-- Для API 33+ альтернативное разрешение без диалога -->
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
-    <!-- Уведомления (API 33+) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Перепланировка будильников после перезагрузки устройства -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
@@ -28,7 +25,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Receiver для срабатывания будильника -->
         <receiver
             android:name=".receiver.AlarmReceiver"
             android:exported="false" />
