@@ -1,22 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Разрешение на точный будильник (API 31+) -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <!-- Для API 33+ альтернативное разрешение без диалога -->
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
-    <!-- Уведомления (API 33+) -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Перепланировка будильников после перезагрузки устройства -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
     <application
-        android:name=".AlarmApp"
         android:allowBackup="true"
-        android:icon="@drawable/ic_alarm_logo"
-        android:label="AlarmApp"
-        android:roundIcon="@drawable/ic_alarm_logo"
-        android:supportsRtl="true"
+        android:label="@string/app_name"
         android:theme="@style/Theme.AlarmProject">
 
         <activity
@@ -27,11 +14,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- Receiver для срабатывания будильника -->
-        <receiver
-            android:name=".receiver.AlarmReceiver"
-            android:exported="false" />
 
     </application>
 
