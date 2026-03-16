@@ -2,6 +2,7 @@ package com.example.alarmproject.ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.example.alarmproject.R
 

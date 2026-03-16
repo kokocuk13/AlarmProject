@@ -8,7 +8,8 @@ import java.time.LocalTime
 
 data class CreateAlarmParams(
     val time: LocalTime,
-    val difficultyLevel: Int
+    val difficultyLevel: Int,
+    val name: String? = null
 )
 
 class CreateAlarmUseCase(
@@ -19,13 +20,19 @@ class CreateAlarmUseCase(
         val alarm = Alarm(
             time = params.time,
             isEnabled = true,
-            task = ShakeTask(requiredShakes = params.difficultyLevel, isCompleted = false)
+            task = ShakeTask(requiredShakes = params.difficultyLevel, isCompleted = false),
+            name = params.name
         )
 
-        val result = repository.saveAlarm(alarm)
-        if (result.isSuccess) {
-            scheduler.schedule(alarm)
+        val saveResult = repository.saveAlarm(alarm)
+        if (saveResult.isSuccess) {
+            // Планируем будильник с реальным id, назначенным базой данных
+            val savedAlarm = saveResult.getOrThrow()
+            scheduler.schedule(savedAlarm)
         }
-        return result
+        return saveResult.fold(
+            onSuccess = { Result.success(Unit) },
+            onFailure = { Result.failure(it) }
+        )
     }
 }
