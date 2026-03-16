@@ -39,6 +39,8 @@ class BarcodeSensorImpl(
                 processImage(imageProxy)
             }
 
+            cameraProvider?.unbindAll()
+
             cameraProvider?.bindToLifecycle(
                 lifecycleOwner,
                 CameraSelector.DEFAULT_BACK_CAMERA,
