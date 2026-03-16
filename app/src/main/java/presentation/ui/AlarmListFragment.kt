@@ -1,12 +1,14 @@
 package presentation.ui
 
-import androidx.recyclerview.widget.DiffUtil
 import android.graphics.Canvas
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -14,14 +16,23 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+
 import com.example.alarmproject.R
 import com.example.alarmproject.di.AppModule
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+
+import data.di.DataModule
+
 import domain.models.Alarm
+import domain.models.BarcodeTask
+import domain.models.ShakeTask
+
 import kotlinx.coroutines.launch
+
 import presentation.viewmodels.AlarmListViewModel
 
 class AlarmListFragment : Fragment() {
@@ -41,6 +52,35 @@ class AlarmListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // XXX Это дебаг, Когда сделаем таску, удалим
+        // ShakeTask
+        val shakeSensor = DataModule.provideShakeSensor(requireContext())
+        var shakeTask = ShakeTask(requiredShakes = 3)
+        var shakeCount = 0
+
+        shakeSensor.start {
+            shakeCount++
+            Log.d("ShakeTest", "Shake #$shakeCount / ${shakeTask.requiredShakes}")
+            if (shakeCount >= shakeTask.requiredShakes) {
+                shakeTask = shakeTask.copy(isCompleted = true)
+                Log.d("ShakeTest", "ТАСКА ВЫПОЛНЕНА, isCompleted = ${shakeTask.isCompleted}")
+                shakeSensor.stop()
+            }
+        }
+
+        // BarcodeTask
+        val requestPermission = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            if (granted) {
+                startBarcodeScanner()
+            } else {
+                Log.d("BarcodeTest", "Разрешение не дано")
+            }
+        }
+        requestPermission.launch(android.Manifest.permission.CAMERA)
+        /// XXX КОНЕЦ
 
         val emptyText = view.findViewById<TextView>(R.id.emptyText)
         val recyclerView = view.findViewById<RecyclerView>(R.id.alarmsRecyclerView)
@@ -109,7 +149,21 @@ class AlarmListFragment : Fragment() {
             findNavController().navigate(R.id.action_home_to_setup)
         }
     }
+    private fun startBarcodeScanner() {
+        val scanner = DataModule.provideBarcodeScanner(requireContext(), viewLifecycleOwner)
+        var barcodeTask = BarcodeTask(requiredBarcode = "12345")
 
+        scanner.start { scanned ->
+            Log.d("BarcodeTest", "Отсканировано: $scanned")
+            if (scanned == barcodeTask.requiredBarcode) {
+                barcodeTask = barcodeTask.copy(isCompleted = true)
+                Log.d("BarcodeTest", "ТАСКА ВЫПОЛНЕНА, isCompleted = ${barcodeTask.isCompleted}")
+                scanner.stop()
+            } else {
+                Log.d("BarcodeTest", "Неверный штрихкод")
+            }
+        }
+    }
     private fun updateEmptyState(emptyText: View, recyclerView: View, alarms: List<Alarm>) {
         if (alarms.isEmpty()) {
             emptyText.visibility = View.VISIBLE
