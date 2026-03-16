@@ -14,7 +14,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.alarmproject.R
-import com.example.alarmproject.di.MockModule
+import com.example.alarmproject.di.AppModule
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 import presentation.viewmodels.AlarmSetupViewModel
@@ -24,7 +24,7 @@ import java.time.LocalTime
 class AlarmSetupFragment : Fragment() {
 
     private val viewModel: AlarmSetupViewModel by viewModels {
-        MockModule.provideAlarmSetupViewModelFactory()
+        AppModule.provideAlarmSetupViewModelFactory()
     }
 
     private var isShakeSelected = true
@@ -98,14 +98,15 @@ class AlarmSetupFragment : Fragment() {
         saveButton.setOnClickListener {
             val time = LocalTime.of(hourPicker.value, minutePicker.value)
             val shakes = if (isShakeSelected) seekBar.progress else 0
-            viewModel.save(time, shakes)
+            val name = alarmNameInput.text?.toString()?.takeIf { it.isNotBlank() } ?: "Будильник"
+            viewModel.save(time, shakes, name)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collect { state ->
                 when (state) {
                     is AlarmUiState.Success -> {
-                        Toast.makeText(context, "Будильник сохранен (Mock)", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Будильник сохранён!", Toast.LENGTH_SHORT).show()
                         findNavController().navigateUp()
                     }
                     is AlarmUiState.Error -> {
