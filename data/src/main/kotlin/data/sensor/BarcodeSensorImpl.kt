@@ -50,6 +50,7 @@ class BarcodeSensorImpl(
     override fun stop() {
         cameraProvider?.unbindAll()
         onScanned = null
+        executor.shutdownNow()
     }
 
     private fun processImage(imageProxy: ImageProxy) {
