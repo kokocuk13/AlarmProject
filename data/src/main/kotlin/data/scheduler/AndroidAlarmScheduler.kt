@@ -39,6 +39,17 @@ class AndroidAlarmScheduler(
             }
         }.timeInMillis
 
+        // Проверка разрешения на точные будильники для Android 12+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+            // Если разрешение не получено, используем обычный setAndAllowWhileIdle (не гарантирует точность до секунды)
+            alarmManager.setAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMillis,
+                pendingIntent
+            )
+            return
+        }
+
         // setExactAndAllowWhileIdle обеспечивает срабатывание даже в Doze-режиме (API 23+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             alarmManager.setExactAndAllowWhileIdle(
