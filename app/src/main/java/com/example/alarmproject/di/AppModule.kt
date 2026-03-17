@@ -14,12 +14,6 @@ import domain.usecases.GetAlarmsUseCase
 import presentation.viewmodels.AlarmListViewModel
 import presentation.viewmodels.AlarmSetupViewModel
 
-/**
- * Модуль зависимостей приложения (заменяет MockModule).
- *
- * Инициализируйте через AppModule.init(context) в Application.onCreate().
- * Все зависимости создаются лениво и кешируются как синглтоны.
- */
 object AppModule {
 
     private lateinit var appContext: Context
@@ -34,7 +28,7 @@ object AppModule {
         AndroidAlarmScheduler(appContext, AlarmReceiver::class.java)
     }
 
-    // Репозиторий с реальной Room-базой (AlarmDatabase скрыта внутри :data)
+    // Репозиторий с Room-базой (AlarmDatabase скрыта внутри :data)
     private val repository: IAlarmRepository by lazy {
         DataModule.provideRepository(appContext)
     }
