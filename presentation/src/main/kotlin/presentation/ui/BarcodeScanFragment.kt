@@ -1,6 +1,8 @@
 package presentation.ui
 
 import android.Manifest
+import android.app.NotificationManager
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -19,6 +21,7 @@ class BarcodeScanFragment : Fragment() {
 
     private var barcodeSensor: IBarcodeSensor? = null
     private var expectedBarcode: String? = null
+    private var alarmId: Long = -1L
     private lateinit var statusText: TextView
 
     private val cameraPermissionLauncher =
@@ -33,6 +36,7 @@ class BarcodeScanFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         expectedBarcode = arguments?.getString(ARG_REQUIRED_BARCODE)
+        alarmId = arguments?.getLong(AlarmRingingFragment.ARG_ALARM_ID, -1L) ?: -1L
     }
 
     override fun onCreateView(
@@ -69,6 +73,13 @@ class BarcodeScanFragment : Fragment() {
                 val success = expected.isNullOrBlank() || expected == scannedValue
                 if (success) {
                     barcodeSensor?.stop()
+
+                    if (alarmId != -1L) {
+                        val notificationManager =
+                            requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                        notificationManager.cancel(alarmId.toInt())
+                    }
+
                     findNavController().navigate(R.id.action_barcode_to_success)
                 } else {
                     statusText.text = "Неверный код: $scannedValue. Попробуйте еще раз."

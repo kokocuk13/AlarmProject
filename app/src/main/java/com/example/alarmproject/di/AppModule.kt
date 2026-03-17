@@ -25,13 +25,13 @@ object AppModule {
         appContext = context.applicationContext
     }
 
-    // Планировщик через AlarmManager
+    // Scheduler
     private val scheduler: IAlarmScheduler by lazy {
         AndroidAlarmScheduler(appContext, AlarmReceiver::class.java)
     }
 
-    // Репозиторий с Room-базой (AlarmDatabase скрыта внутри :data)
-    private val repository: IAlarmRepository by lazy {
+    // Room
+    val repository: IAlarmRepository by lazy {
         DataModule.provideRepository(appContext)
     }
 

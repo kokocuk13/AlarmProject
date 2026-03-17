@@ -12,4 +12,7 @@ interface IAlarmRepository {
 
     /** Удаляет будильник по id. */
     suspend fun deleteAlarm(id: Long): Result<Unit>
+
+    /** Возвращает будильник по его id. */
+    suspend fun getAlarmById(id: Long): Result<Alarm?>
 }

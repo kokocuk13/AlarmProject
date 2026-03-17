@@ -23,6 +23,7 @@ class AlarmRingingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val alarmId = arguments?.getLong(ARG_ALARM_ID, -1L) ?: -1L
         val name = arguments?.getString("name") ?: "Будильник"
         val hour = arguments?.getInt("hour") ?: 7
         val minute = arguments?.getInt("minute") ?: 0
@@ -34,21 +35,31 @@ class AlarmRingingFragment : Fragment() {
             String.format("%s\n%02d:%02d", name, hour, minute)
 
         view.findViewById<Button>(R.id.dismissButton).setOnClickListener {
+            val commonBundle = bundleOf(
+                ARG_ALARM_ID to alarmId,
+                "name" to name,
+                "hour" to hour,
+                "minute" to minute
+            )
+
             if (taskType.equals(TASK_BARCODE, ignoreCase = true)) {
+                commonBundle.putString(ARG_REQUIRED_BARCODE, requiredBarcode)
                 findNavController().navigate(
                     R.id.action_ringing_to_barcode,
-                    bundleOf(ARG_REQUIRED_BARCODE to requiredBarcode)
+                    commonBundle
                 )
             } else {
+                commonBundle.putInt(ARG_REQUIRED_SHAKES, requiredShakes)
                 findNavController().navigate(
                     R.id.action_ringing_to_shake,
-                    bundleOf(ARG_REQUIRED_SHAKES to requiredShakes)
+                    commonBundle
                 )
             }
         }
     }
 
     companion object {
+        const val ARG_ALARM_ID = "ALARM_ID"
         const val ARG_TASK_TYPE = "task_type"
         const val ARG_REQUIRED_SHAKES = "required_shakes"
         const val ARG_REQUIRED_BARCODE = "required_barcode"

@@ -21,4 +21,8 @@ interface AlarmDao {
     /** Удаляет будильник по id. */
     @Query("DELETE FROM alarms WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    /** Возвращает будильник по id. */
+    @Query("SELECT * FROM alarms WHERE id = :id")
+    suspend fun getById(id: Long): AlarmEntity?
 }

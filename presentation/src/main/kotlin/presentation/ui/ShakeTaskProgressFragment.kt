@@ -1,5 +1,7 @@
 package presentation.ui
 
+import android.app.NotificationManager
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,6 +19,7 @@ class ShakeTaskProgressFragment : Fragment() {
     private var shakeSensor: IShakeSensor? = null
     private var requiredShakes: Int = 20
     private var currentShakes: Int = 0
+    private var alarmId: Long = -1L
 
     private lateinit var progressBar: ProgressBar
     private lateinit var progressText: TextView
@@ -24,6 +27,7 @@ class ShakeTaskProgressFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requiredShakes = arguments?.getInt(ARG_REQUIRED_SHAKES, 20)?.coerceAtLeast(1) ?: 20
+        alarmId = arguments?.getLong(AlarmRingingFragment.ARG_ALARM_ID, -1L) ?: -1L
     }
 
     override fun onCreateView(
@@ -67,6 +71,13 @@ class ShakeTaskProgressFragment : Fragment() {
 
     private fun completeTask() {
         shakeSensor?.stop()
+
+        if (alarmId != -1L) {
+            val notificationManager = 
+                requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(alarmId.toInt())
+        }
+
         findNavController().navigate(R.id.action_shake_to_success)
     }
 
