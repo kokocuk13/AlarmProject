@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/splashFragment">
+
+    <!-- Splash Screen -->
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="presentation.ui.SplashFragment"
+        android:label="SplashFragment">
+        <action
+            android:id="@+id/action_splash_to_onboarding"
+            app:destination="@id/onboardingFragment"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_splash_to_home"
+            app:destination="@id/alarmListFragment"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Onboarding -->
+    <fragment
+        android:id="@+id/onboardingFragment"
+        android:name="presentation.ui.OnboardingFragment"
+        android:label="OnboardingFragment">
+        <action
+            android:id="@+id/action_onboarding_to_home"
+            app:destination="@id/alarmListFragment"
+            app:popUpTo="@id/onboardingFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Home - список будильников -->
+    <fragment
+        android:id="@+id/alarmListFragment"
+        android:name="presentation.ui.AlarmListFragment"
+        android:label="AlarmListFragment">
+        <action
+            android:id="@+id/action_home_to_setup"
+            app:destination="@id/alarmSetupFragment" />
+        <action
+            android:id="@+id/action_home_to_ringing"
+            app:destination="@id/alarmRingingFragment" />
+    </fragment>
+
+    <!-- Alarm Setup -->
+    <fragment
+        android:id="@+id/alarmSetupFragment"
+        android:name="presentation.ui.AlarmSetupFragment"
+        android:label="AlarmSetupFragment">
+        <argument
+            android:name="alarmId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+    </fragment>
+
+    <!-- Alarm Ringing -->
+    <fragment
+        android:id="@+id/alarmRingingFragment"
+        android:name="presentation.ui.AlarmRingingFragment"
+        android:label="AlarmRingingFragment">
+        <action
+            android:id="@+id/action_ringing_to_success"
+            app:destination="@id/alarmSuccessFragment" />
+    </fragment>
+
+    <!-- Alarm Success -->
+    <fragment
+        android:id="@+id/alarmSuccessFragment"
+        android:name="presentation.ui.AlarmSuccessFragment"
+        android:label="AlarmSuccessFragment" />
+
+</navigation>

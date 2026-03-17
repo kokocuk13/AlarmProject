@@ -2,37 +2,57 @@ package presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import domain.models.Alarm
 import domain.usecases.CreateAlarmParams
 import domain.usecases.CreateAlarmUseCase
+import domain.usecases.GetAlarmsUseCase
 import java.time.LocalTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 sealed class AlarmUiState {
-    data object Idle : AlarmUiState()
+    data object Idle    : AlarmUiState()
     data object Loading : AlarmUiState()
     data object Success : AlarmUiState()
-    data class Error(val message: String) : AlarmUiState()
+    data class  Error(val message: String) : AlarmUiState()
 }
 
-class AlarmSetupViewModel(private val createAlarmUseCase: CreateAlarmUseCase) : ViewModel() {
+class AlarmSetupViewModel(
+    private val createAlarmUseCase: CreateAlarmUseCase,
+    private val getAlarmsUseCase:   GetAlarmsUseCase
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AlarmUiState>(AlarmUiState.Idle)
     val uiState = _uiState.asStateFlow()
 
-    fun save(time: LocalTime, shakes: Int, name: String = "Будильник") {
+    /** Загружает один будильник по id для экрана редактирования. */
+    suspend fun loadAlarm(id: Long): Alarm? =
+        getAlarmsUseCase().first().find { it.id == id }
+
+    fun save(
+        time:     LocalTime,
+        shakes:   Int,
+        name:     String      = "Будильник",
+        days:     List<Int>   = emptyList(),
+        taskType: String      = "SHAKE",
+        alarmId:  Long        = 0L
+    ) {
         viewModelScope.launch {
             _uiState.value = AlarmUiState.Loading
-
-            val params = CreateAlarmParams(time, shakes, name)
-            val result = createAlarmUseCase.invoke(params)
-
-            _uiState.value = if (result.isSuccess) {
-                AlarmUiState.Success
-            } else {
-                AlarmUiState.Error("Не удалось сохранить будильник")
-            }
+            val result = createAlarmUseCase.invoke(
+                CreateAlarmParams(
+                    time           = time,
+                    difficultyLevel = shakes,
+                    name           = name,
+                    days           = days,
+                    taskType       = taskType,
+                    alarmId        = alarmId
+                )
+            )
+            _uiState.value = if (result.isSuccess) AlarmUiState.Success
+                             else AlarmUiState.Error("Не удалось сохранить будильник")
         }
     }
 }

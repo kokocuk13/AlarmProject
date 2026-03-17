@@ -3,19 +3,25 @@ package data.repository
 import data.db.AlarmDao
 import data.db.AlarmEntity
 import domain.models.Alarm
+import domain.models.BarcodeTask
 import domain.models.ShakeTask
 import domain.repository.IAlarmRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-
+/**
+ * Реальная реализация репозитория, хранящая будильники в Room (SQLite).
+ *
+ * @param dao DAO для работы с таблицей alarms.
+ */
 class AlarmRepositoryImpl(private val dao: AlarmDao) : IAlarmRepository {
 
     override suspend fun saveAlarm(alarm: Alarm): Result<Alarm> {
         return try {
             val entity = alarm.toEntity()
             val generatedId = dao.insert(entity)
-            Result.success(alarm.copy(id = generatedId))
+            val finalId = if (alarm.id == 0L) generatedId else alarm.id
+            Result.success(alarm.copy(id = finalId))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -33,14 +39,7 @@ class AlarmRepositoryImpl(private val dao: AlarmDao) : IAlarmRepository {
         }
     }
 
-    override suspend fun getAlarmById(id: Long): Result<Alarm?> {
-        return try {
-            val entity = dao.getById(id)
-            Result.success(entity?.toDomain())
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+    // ─── Маппинг ──────────────────────────────────────────────────────────────
 
     private fun Alarm.toEntity() = AlarmEntity(
         id = id,
@@ -48,14 +47,29 @@ class AlarmRepositoryImpl(private val dao: AlarmDao) : IAlarmRepository {
         minute = time.minute,
         isEnabled = isEnabled,
         name = name,
-        requiredShakes = (task as? ShakeTask)?.requiredShakes ?: 0
+        requiredShakes = (task as? ShakeTask)?.requiredShakes ?: 0,
+        days = days.joinToString(","),
+        taskType = when (task) {
+            is BarcodeTask -> "BARCODE"
+            else -> "SHAKE"
+        }
     )
 
-    private fun AlarmEntity.toDomain() = Alarm(
-        id = id,
-        time = java.time.LocalTime.of(hour, minute),
-        isEnabled = isEnabled,
-        task = ShakeTask(requiredShakes = requiredShakes, isCompleted = false),
-        name = name
-    )
+    private fun AlarmEntity.toDomain(): Alarm {
+        val parsedDays = if (days.isBlank()) emptyList()
+                         else days.split(",").mapNotNull { it.trim().toIntOrNull() }
+        val task = if (taskType == "BARCODE") {
+            BarcodeTask(requiredBarcode = "12345")
+        } else {
+            ShakeTask(requiredShakes = requiredShakes, isCompleted = false)
+        }
+        return Alarm(
+            id = id,
+            time = java.time.LocalTime.of(hour, minute),
+            isEnabled = isEnabled,
+            task = task,
+            name = name,
+            days = parsedDays
+        )
+    }
 }

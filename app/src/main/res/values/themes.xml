@@ -1,20 +1,23 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.AlarmProject" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <!-- Primary brand color. -->
+
+    <style name="Theme.AlarmProject" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">#6B4EFF</item>
-        <item name="colorPrimaryVariant">#3700B3</item>
+        <item name="colorPrimaryVariant">#5B3EEF</item>
         <item name="colorOnPrimary">@android:color/white</item>
-        <!-- Secondary brand color. -->
         <item name="colorSecondary">#03DAC6</item>
         <item name="colorSecondaryVariant">#018786</item>
         <item name="colorOnSecondary">@android:color/black</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor">#6B4EFF</item>
+        <item name="android:windowBackground">@android:color/white</item>
     </style>
 
-    <style name="NumberPickerTheme">
+    <!-- Тема для NumberPicker: принудительно чёрный текст -->
+    <style name="NumberPickerTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:textColor">#000000</item>
         <item name="android:textColorPrimary">#000000</item>
+        <item name="android:textColorSecondary">#000000</item>
+        <item name="android:colorControlNormal">#6B4EFF</item>
+        <item name="colorControlNormal">#6B4EFF</item>
     </style>
 
     <style name="DayButton" parent="Widget.MaterialComponents.Button.UnelevatedButton">
@@ -28,4 +31,5 @@
         <item name="backgroundTint">#F0F0F0</item>
         <item name="android:textColor">#333333</item>
     </style>
+
 </resources>

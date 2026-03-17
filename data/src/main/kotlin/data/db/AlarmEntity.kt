@@ -6,6 +6,8 @@ import androidx.room.PrimaryKey
 /**
  * Room-сущность для хранения будильника в SQLite.
  * Маппируется в/из domain.models.Alarm через расширения в AlarmRepositoryImpl.
+ * days — строка с номерами дней через запятую, например "0,1,2"
+ * taskType — "SHAKE" или "BARCODE"
  */
 @Entity(tableName = "alarms")
 data class AlarmEntity(
@@ -15,5 +17,7 @@ data class AlarmEntity(
     val minute: Int,
     val isEnabled: Boolean,
     val name: String?,
-    val requiredShakes: Int
+    val requiredShakes: Int,
+    val days: String = "",
+    val taskType: String = "SHAKE"
 )
