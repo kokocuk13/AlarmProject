@@ -10,7 +10,9 @@ class AlarmApp : Application() {
         AppModule.init(this)
         PresentationDependencies.init(
             alarmSetupViewModelFactory = AppModule.provideAlarmSetupViewModelFactory(),
-            alarmListViewModelFactory = AppModule.provideAlarmListViewModelFactory()
+            alarmListViewModelFactory = AppModule.provideAlarmListViewModelFactory(),
+            provideShakeSensor = { AppModule.provideShakeSensor() },
+            provideBarcodeSensor = { lifecycleOwner -> AppModule.provideBarcodeSensor(lifecycleOwner) }
         )
     }
 }
