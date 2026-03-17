@@ -41,6 +41,9 @@
         <action
             android:id="@+id/action_home_to_setup"
             app:destination="@id/alarmSetupFragment" />
+        <action
+            android:id="@+id/action_home_to_ringing"
+            app:destination="@id/alarmRingingFragment" />
     </fragment>
 
     <!-- Alarm Setup -->
@@ -48,5 +51,42 @@
         android:id="@+id/alarmSetupFragment"
         android:name="presentation.ui.AlarmSetupFragment"
         android:label="AlarmSetupFragment" />
+
+    <!-- Alarm Ringing -->
+    <fragment
+        android:id="@+id/alarmRingingFragment"
+        android:name="presentation.ui.AlarmRingingFragment"
+        android:label="AlarmRingingFragment">
+        <action
+            android:id="@+id/action_ringing_to_shake"
+            app:destination="@id/shakeTaskProgressFragment" />
+        <action
+            android:id="@+id/action_ringing_to_barcode"
+            app:destination="@id/barcodeScanFragment" />
+    </fragment>
+    <!-- Alarm task -->
+    <fragment
+        android:id="@+id/shakeTaskProgressFragment"
+        android:name="presentation.ui.ShakeTaskProgressFragment"
+        android:label="ShakeTaskProgressFragment">
+        <action
+            android:id="@+id/action_shake_to_success"
+            app:destination="@id/alarmSuccessFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/barcodeScanFragment"
+        android:name="presentation.ui.BarcodeScanFragment"
+        android:label="BarcodeScanFragment">
+        <action
+            android:id="@+id/action_barcode_to_success"
+            app:destination="@id/alarmSuccessFragment" />
+    </fragment>
+
+    <!-- Alarm Success -->
+    <fragment
+        android:id="@+id/alarmSuccessFragment"
+        android:name="presentation.ui.AlarmSuccessFragment"
+        android:label="AlarmSuccessFragment" />
 
 </navigation>

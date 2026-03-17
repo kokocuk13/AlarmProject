@@ -7,6 +7,8 @@ import com.example.alarmproject.receiver.AlarmReceiver
 import data.di.DataModule
 import data.scheduler.AndroidAlarmScheduler
 import domain.repository.IAlarmRepository
+import domain.repository.IBarcodeSensor
+import domain.repository.IShakeSensor
 import domain.scheduler.IAlarmScheduler
 import domain.usecases.CreateAlarmUseCase
 import domain.usecases.DeleteAlarmUseCase
@@ -14,12 +16,6 @@ import domain.usecases.GetAlarmsUseCase
 import presentation.viewmodels.AlarmListViewModel
 import presentation.viewmodels.AlarmSetupViewModel
 
-/**
- * Модуль зависимостей приложения (заменяет MockModule).
- *
- * Инициализируйте через AppModule.init(context) в Application.onCreate().
- * Все зависимости создаются лениво и кешируются как синглтоны.
- */
 object AppModule {
 
     private lateinit var appContext: Context
@@ -29,13 +25,13 @@ object AppModule {
         appContext = context.applicationContext
     }
 
-    // Планировщик через AlarmManager
+    // Scheduler
     private val scheduler: IAlarmScheduler by lazy {
         AndroidAlarmScheduler(appContext, AlarmReceiver::class.java)
     }
 
-    // Репозиторий с реальной Room-базой (AlarmDatabase скрыта внутри :data)
-    private val repository: IAlarmRepository by lazy {
+    // Room
+    val repository: IAlarmRepository by lazy {
         DataModule.provideRepository(appContext)
     }
 
@@ -73,4 +69,10 @@ object AppModule {
                 throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }
         }
+
+    fun provideShakeSensor(): IShakeSensor =
+        DataModule.provideShakeSensor(appContext)
+
+    fun provideBarcodeSensor(lifecycleOwner: androidx.lifecycle.LifecycleOwner): IBarcodeSensor =
+        DataModule.provideBarcodeScanner(appContext, lifecycleOwner)
 }

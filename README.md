@@ -72,7 +72,7 @@ Data Layer (data)
 
 ```
 AlarmProject/
-├── app/                        # Точка входа, MainActivity, манифест
+├── app/                        # Точка входа и composition root (Application, MainActivity, DI)
 ├── domain/                     # Бизнес-логика
 │   └── src/main/kotlin/domain/
 │       ├── models/             # Alarm, DismissTask, ShakeTask
@@ -86,7 +86,7 @@ AlarmProject/
 └── presentation/               # UI слой
     └── src/main/kotlin/presentation/
         ├── ui/                 # SplashFragment, OnboardingFragment,
-        │                       # AlarmListFragment, AlarmSetupFragment
+        │                       # AlarmListFragment, AlarmSetupFragment, AlarmRingingFragment, AlarmSuccessFragment
         └── viewmodels/         # AlarmSetupViewModel, AlarmUiState
 ```
 
@@ -108,7 +108,7 @@ override suspend fun saveAlarm(alarm: Alarm): Result<Unit> {
 **`data/src/main/kotlin/data/scheduler/AndroidAlarmScheduler.kt`**
 Мок планировщика — логирует вызов без реального AlarmManager.
 
-Состояния UI (`AlarmUiState`) в `presentation/viewmodels/AlarmSetupViewModel.kt`:
+Состояния UI (`AlarmUiState`) в `presentation/src/main/kotlin/presentation/viewmodels/AlarmSetupViewModel.kt`:
 
 | Состояние | Описание |
 |---|---|
@@ -127,7 +127,7 @@ override suspend fun saveAlarm(alarm: Alarm): Result<Unit> {
 
 1. Запустить приложение
 2. **Splash** — логотип, автоматический переход (1.5 сек)
-3. **Onboarding** — нажать кнопку «Начать» *(показывается только при первом запуске)*
+3. **Onboarding** — нажать кнопку «Начать» 
 4. **Home (пусто)** — экран с текстом «Добавьте свой первый будильник», нажать «+»
 5. **Настройка будильника:**
    - Выбрать время (прокрутить часы и минуты)

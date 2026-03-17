@@ -8,11 +8,7 @@ import domain.repository.IAlarmRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-/**
- * Реальная реализация репозитория, хранящая будильники в Room (SQLite).
- *
- * @param dao DAO для работы с таблицей alarms.
- */
+
 class AlarmRepositoryImpl(private val dao: AlarmDao) : IAlarmRepository {
 
     override suspend fun saveAlarm(alarm: Alarm): Result<Alarm> {
@@ -37,7 +33,14 @@ class AlarmRepositoryImpl(private val dao: AlarmDao) : IAlarmRepository {
         }
     }
 
-    // ─── Маппинг ──────────────────────────────────────────────────────────────
+    override suspend fun getAlarmById(id: Long): Result<Alarm?> {
+        return try {
+            val entity = dao.getById(id)
+            Result.success(entity?.toDomain())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
     private fun Alarm.toEntity() = AlarmEntity(
         id = id,

@@ -13,7 +13,6 @@
         android:paddingEnd="20dp"
         android:paddingBottom="32dp">
 
-        <!-- Заголовок -->
         <TextView
             android:id="@+id/titleText"
             android:layout_width="0dp"
@@ -27,7 +26,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- TimePicker: Часы и минуты -->
         <LinearLayout
             android:id="@+id/timePickerContainer"
             android:layout_width="wrap_content"
@@ -47,7 +45,8 @@
                 <NumberPicker
                     android:id="@+id/hourPicker"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:theme="@style/NumberPickerTheme" />
             </LinearLayout>
 
             <TextView
@@ -68,12 +67,12 @@
                 <NumberPicker
                     android:id="@+id/minutePicker"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:theme="@style/NumberPickerTheme" />
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Дни недели -->
         <LinearLayout
             android:id="@+id/daysContainer"
             android:layout_width="0dp"
@@ -85,17 +84,16 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
-            <Button android:id="@+id/dayMon" android:text="ПН" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" android:textSize="11sp" android:padding="0dp" />
-            <Button android:id="@+id/dayTue" android:text="ВТ" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" android:textSize="11sp" android:padding="0dp" />
-            <Button android:id="@+id/dayWed" android:text="СР" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" android:textSize="11sp" android:padding="0dp" />
-            <Button android:id="@+id/dayThu" android:text="ЧТ" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" android:textSize="11sp" android:padding="0dp" />
-            <Button android:id="@+id/dayFri" android:text="ПТ" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" android:textSize="11sp" android:padding="0dp" />
-            <Button android:id="@+id/daySat" android:text="СБ" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" android:textSize="11sp" android:padding="0dp" />
-            <Button android:id="@+id/daySun" android:text="ВС" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" android:textSize="11sp" android:padding="0dp" />
+            <Button android:id="@+id/dayMon" style="@style/DayButton" android:text="ПН" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" />
+            <Button android:id="@+id/dayTue" style="@style/DayButton" android:text="ВТ" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" />
+            <Button android:id="@+id/dayWed" style="@style/DayButton" android:text="СР" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" />
+            <Button android:id="@+id/dayThu" style="@style/DayButton" android:text="ЧТ" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" />
+            <Button android:id="@+id/dayFri" style="@style/DayButton" android:text="ПТ" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" />
+            <Button android:id="@+id/daySat" style="@style/DayButton" android:text="СБ" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" />
+            <Button android:id="@+id/daySun" style="@style/DayButton" android:text="ВС" android:layout_weight="1" android:layout_width="0dp" android:layout_height="36dp" />
 
         </LinearLayout>
 
-        <!-- Способ отключения: Тряска / Штрих-код -->
         <LinearLayout
             android:id="@+id/dismissMethodContainer"
             android:layout_width="0dp"
@@ -107,7 +105,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
-            <!-- Тряска -->
             <LinearLayout
                 android:id="@+id/shakeCard"
                 android:layout_width="0dp"
@@ -132,7 +129,6 @@
                     android:layout_marginTop="4dp" />
             </LinearLayout>
 
-            <!-- Штрих-код -->
             <LinearLayout
                 android:id="@+id/barcodeCard"
                 android:layout_width="0dp"
@@ -160,7 +156,6 @@
 
         </LinearLayout>
 
-        <!-- Слайдер количества встряхиваний (виден только при shakeCard) -->
         <LinearLayout
             android:id="@+id/shakeCountContainer"
             android:layout_width="0dp"
@@ -202,7 +197,6 @@
 
         </LinearLayout>
 
-        <!-- Мелодия -->
         <LinearLayout
             android:id="@+id/melodyRow"
             android:layout_width="0dp"
@@ -246,13 +240,14 @@
 
         </LinearLayout>
 
-        <!-- Название будильника -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/alarmNameLayout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:hint="Название будильника"
             android:layout_marginTop="16dp"
+            app:boxStrokeColor="#6B4EFF"
+            app:hintTextColor="#6B4EFF"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             app:layout_constraintTop_toBottomOf="@id/melodyRow"
             app:layout_constraintStart_toStartOf="parent"
@@ -262,12 +257,11 @@
                 android:id="@+id/alarmNameInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Placeholder"
-                android:inputType="text" />
+                android:inputType="text"
+                android:theme="@style/NumberPickerTheme" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Кнопка Сохранить -->
         <Button
             android:id="@+id/saveButton"
             android:layout_width="0dp"
