@@ -60,7 +60,7 @@ class AlarmListFragment : Fragment() {
         )
         recyclerView.adapter = adapter
 
-        // Свайп влево — удаляет будильник
+        // Свайп влево удаляет будильник
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             override fun onMove(
                 rv: RecyclerView,

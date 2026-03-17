@@ -45,7 +45,8 @@
                 <NumberPicker
                     android:id="@+id/hourPicker"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:theme="@style/NumberPickerTheme" />
             </LinearLayout>
 
             <TextView
@@ -66,7 +67,8 @@
                 <NumberPicker
                     android:id="@+id/minutePicker"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:theme="@style/NumberPickerTheme" />
             </LinearLayout>
 
         </LinearLayout>
@@ -255,7 +257,8 @@
                 android:id="@+id/alarmNameInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text" />
+                android:inputType="text"
+                android:theme="@style/NumberPickerTheme" />
 
         </com.google.android.material.textfield.TextInputLayout>
 

@@ -37,7 +37,7 @@ class ShakeSensorImpl(
         // Акселерометр всегда "чувствует"(как же он чувствует) гравитацию, поэтому вычитаем для получения чистой
         val acceleration = sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH
 
-        // Сильнее 20 метров в секунду
+        // В Android studio стоит делать 10-8 тк ну оч сложно, на телефоне 20 - ок
         if (acceleration > 20f) {
             lastTime = now
             onShake?.invoke()

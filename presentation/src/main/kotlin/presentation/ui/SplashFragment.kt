@@ -3,6 +3,7 @@ package presentation.ui
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,23 @@ import androidx.navigation.fragment.findNavController
 import presentation.R
 
 class SplashFragment : Fragment() {
+
+    private val splashHandler = Handler(Looper.getMainLooper())
+    private val navigateRunnable = Runnable {
+        if (!isAdded) return@Runnable
+
+        val navController = findNavController()
+        if (navController.currentDestination?.id != R.id.splashFragment) return@Runnable
+
+        val prefs = requireContext().getSharedPreferences("alarm_prefs", Context.MODE_PRIVATE)
+        val onboardingShown = prefs.getBoolean("onboarding_shown", false)
+
+        if (onboardingShown) {
+            navController.navigate(R.id.action_splash_to_home)
+        } else {
+            navController.navigate(R.id.action_splash_to_onboarding)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -21,17 +39,11 @@ class SplashFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        splashHandler.postDelayed(navigateRunnable, 1500)
+    }
 
-        // Проверяем, был ли онбординг уже показан
-        val prefs = requireContext().getSharedPreferences("alarm_prefs", android.content.Context.MODE_PRIVATE)
-        val onboardingShown = prefs.getBoolean("onboarding_shown", false)
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            if (onboardingShown) {
-                findNavController().navigate(R.id.action_splash_to_home)
-            } else {
-                findNavController().navigate(R.id.action_splash_to_onboarding)
-            }
-        }, 1500) // 1.5 секунды на сплэш
+    override fun onDestroyView() {
+        splashHandler.removeCallbacks(navigateRunnable)
+        super.onDestroyView()
     }
 }

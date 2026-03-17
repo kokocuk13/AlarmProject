@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import presentation.R
 
@@ -22,7 +23,19 @@ class AlarmSuccessFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<Button>(R.id.backToHomeButton).setOnClickListener {
-            findNavController().popBackStack(R.id.alarmListFragment, false)
+            val navController = findNavController()
+
+            val poppedToHome = navController.popBackStack(R.id.alarmListFragment, false)
+            if (!poppedToHome) {
+                navController.navigate(
+                    R.id.alarmListFragment,
+                    null,
+                    NavOptions.Builder()
+                        .setLaunchSingleTop(true)
+                        .setPopUpTo(R.id.nav_graph, false)
+                        .build()
+                )
+            }
         }
     }
 }
