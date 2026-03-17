@@ -8,7 +8,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.example.alarmproject.R
+import presentation.R
 
 class AlarmRingingFragment : Fragment() {
 
