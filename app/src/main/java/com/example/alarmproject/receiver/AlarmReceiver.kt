@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import com.example.alarmproject.di.AppModule
 import com.example.alarmproject.ui.MainActivity
 import domain.models.Alarm
+import domain.models.BarcodeTask
 import domain.models.ShakeTask
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -72,6 +73,10 @@ class AlarmReceiver : BroadcastReceiver() {
                 is ShakeTask -> {
                     putExtra(MainActivity.EXTRA_TASK_TYPE, MainActivity.TASK_SHAKE)
                     putExtra(MainActivity.EXTRA_REQUIRED_SHAKES, task.requiredShakes)
+                }
+                is BarcodeTask -> { // Если задача - BarcodeTask, передаем тип задачи и requiredBarcode в Intent. Это позволит MainActivity открыть правильный экран для отключения будильника.
+                    putExtra(MainActivity.EXTRA_TASK_TYPE, MainActivity.TASK_BARCODE)
+                    putExtra(MainActivity.EXTRA_REQUIRED_BARCODE, task.requiredBarcode)
                 }
             }
         }

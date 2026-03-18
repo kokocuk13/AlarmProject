@@ -8,7 +8,9 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.NumberPicker
 import android.widget.SeekBar
+import android.widget.TextView
 import android.widget.Toast
+import androidx.core.graphics.toColorInt
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -28,6 +30,7 @@ class AlarmSetupFragment : Fragment() {
     }
 
     private var isShakeSelected = true
+    private var selectedBarcodeValue: String? = null // Добавляем переменную для хранения выбранного штрих-кода
     private val selectedDays = mutableSetOf<Int>()
 
     override fun onCreateView(
@@ -75,18 +78,40 @@ class AlarmSetupFragment : Fragment() {
         val shakeCard = view.findViewById<LinearLayout>(R.id.shakeCard)
         val barcodeCard = view.findViewById<LinearLayout>(R.id.barcodeCard)
         val shakeCountContainer = view.findViewById<LinearLayout>(R.id.shakeCountContainer)
+        val barcodeControlsContainer = view.findViewById<LinearLayout>(R.id.barcodeControlsContainer)
+        val scanBarcodeButton = view.findViewById<Button>(R.id.scanBarcodeButton)
+        val selectedBarcodeText = view.findViewById<TextView>(R.id.selectedBarcodeText)
 
         shakeCard.setOnClickListener {
             isShakeSelected = true
             updateDismissCards(shakeCard, barcodeCard)
             shakeCountContainer.visibility = View.VISIBLE
+            barcodeControlsContainer.visibility = View.GONE // Скрываем элементы управления для штрихкода, когда выбран режим встряхивания
         }
 
         barcodeCard.setOnClickListener {
             isShakeSelected = false
             updateDismissCards(shakeCard, barcodeCard)
             shakeCountContainer.visibility = View.GONE
+            barcodeControlsContainer.visibility = View.VISIBLE // Показываем элементы управления для штрихкода, когда выбран режим штрихкода
         }
+
+        scanBarcodeButton.setOnClickListener {
+            showBarcodePickDialog()
+        }
+// Подписываемся на результат сканирования штрих-кода из BarcodeScanFragment
+        findNavController().currentBackStackEntry
+            ?.savedStateHandle
+            ?.getLiveData<String>(BarcodeScanFragment.RESULT_SCANNED_BARCODE)
+            ?.observe(viewLifecycleOwner) { scannedCode ->
+                if (scannedCode.isNullOrBlank()) return@observe
+                selectedBarcodeValue = scannedCode
+                selectedBarcodeText.text = scannedCode
+                viewModel.saveScannedBarcode(scannedCode)
+                findNavController().currentBackStackEntry
+                    ?.savedStateHandle
+                    ?.remove<String>(BarcodeScanFragment.RESULT_SCANNED_BARCODE)
+            }
 
         val seekBar = view.findViewById<SeekBar>(R.id.shakeCountSeekBar)
         seekBar.max = 40
@@ -99,7 +124,11 @@ class AlarmSetupFragment : Fragment() {
             val time = LocalTime.of(hourPicker.value, minutePicker.value)
             val shakes = if (isShakeSelected) seekBar.progress else 0
             val name = alarmNameInput.text?.toString()?.takeIf { it.isNotBlank() } ?: "Будильник"
-            viewModel.save(time, shakes, name)
+            if (!isShakeSelected && selectedBarcodeValue.isNullOrBlank()) { // Если выбран режим штрихкода, но штрихкод не выбран, показываем сообщение и не сохраняем будильник
+                Toast.makeText(context, "Сначала выберите или отсканируйте штрих-код", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            viewModel.save(time, shakes, name, selectedBarcodeValue)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -123,14 +152,41 @@ class AlarmSetupFragment : Fragment() {
         }
     }
 
+    private fun showBarcodePickDialog() {// Показываем диалог для выбора сохраненного штрих-кода или сканирования нового
+        val barcodes = viewModel.savedBarcodes.value
+        if (barcodes.isEmpty()) {
+            findNavController().navigate(R.id.action_alarm_setup_to_barcode)
+            return
+        }
+
+        val labels = mutableListOf<String>()
+        labels += "Сканировать новый"
+        labels += barcodes.map { "${it.alias} (${it.codeValue})" }
+
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Штрих-код")
+            .setItems(labels.toTypedArray()) { _, which ->
+                if (which == 0) {
+                    findNavController().navigate(R.id.action_alarm_setup_to_barcode)
+                } else {
+                    selectedBarcodeValue = barcodes[which - 1].codeValue
+                    view?.findViewById<TextView>(R.id.selectedBarcodeText)?.text = selectedBarcodeValue
+                }
+            }
+            .show()
+    }
+
     private fun updateDayButtons(buttons: List<Button>) {
         buttons.forEachIndexed { index, button ->
             if (selectedDays.contains(index)) {
+                button.setBackgroundColor(android.graphics.Color.parseColor("#6B4EFF"))
                 button.setBackgroundColor(android.graphics.Color.parseColor("#6B4EFF"))
                 button.setTextColor(android.graphics.Color.WHITE)
             } else {
                 button.setBackgroundColor(android.graphics.Color.parseColor("#F0F0F0"))
                 button.setTextColor(android.graphics.Color.parseColor("#333333"))
+                button.setBackgroundColor("#F0F0F0".toColorInt())
+                button.setTextColor("#333333".toColorInt())
             }
         }
     }
