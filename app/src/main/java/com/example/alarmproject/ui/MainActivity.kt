@@ -8,23 +8,22 @@ import com.example.alarmproject.R
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        const val EXTRA_TASK_TYPE = "extra_task_type"
+        const val EXTRA_REQUIRED_SHAKES = "extra_required_shakes"
+        const val TASK_SHAKE = "shake"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
+        supportActionBar?.title = "AlarmApp"
 
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
-
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            supportActionBar?.title = when (destination.id) {
-                R.id.alarmListFragment -> "AlarmApp"
-                R.id.alarmSetupFragment -> "AlarmApp"
-                else -> "AlarmApp"
-            }
-        }
+        navHostFragment.navController
     }
 }

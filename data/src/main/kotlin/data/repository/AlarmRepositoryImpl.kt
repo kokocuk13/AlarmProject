@@ -39,6 +39,14 @@ class AlarmRepositoryImpl(private val dao: AlarmDao) : IAlarmRepository {
         }
     }
 
+    override suspend fun getAlarmById(id: Long): Result<Alarm?> {
+        return try {
+            val entity = dao.getById(id)
+            Result.success(entity?.toDomain())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
     // ─── Маппинг ──────────────────────────────────────────────────────────────
 
     private fun Alarm.toEntity() = AlarmEntity(

@@ -6,23 +6,18 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
-/** DAO для CRUD-операций с будильниками в Room. */
 @Dao
 interface AlarmDao {
 
-    /** Вставляет будильник и возвращает сгенерированный id. */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(alarm: AlarmEntity): Long
 
-    /** Возвращает живой поток всех будильников, отсортированных по времени. */
     @Query("SELECT * FROM alarms ORDER BY hour ASC, minute ASC")
     fun getAllAlarms(): Flow<List<AlarmEntity>>
 
-    /** Удаляет будильник по id. */
     @Query("DELETE FROM alarms WHERE id = :id")
     suspend fun deleteById(id: Long)
 
-    /** Возвращает будильник по id. */
-    @Query("SELECT * FROM alarms WHERE id = :id")
+    @Query("SELECT * FROM alarms WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): AlarmEntity?
 }

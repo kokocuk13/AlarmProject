@@ -1,12 +1,15 @@
 package com.example.alarmproject.di
 
 import android.content.Context
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.alarmproject.receiver.AlarmReceiver
 import data.di.DataModule
 import data.scheduler.AndroidAlarmScheduler
 import domain.repository.IAlarmRepository
+import domain.repository.IBarcodeSensor
+import domain.repository.IShakeSensor
 import domain.scheduler.IAlarmScheduler
 import domain.usecases.CreateAlarmUseCase
 import domain.usecases.DeleteAlarmUseCase
@@ -26,7 +29,7 @@ object AppModule {
         AndroidAlarmScheduler(appContext, AlarmReceiver::class.java)
     }
 
-    private val repository: IAlarmRepository by lazy {
+    internal val repository: IAlarmRepository by lazy {
         DataModule.provideRepository(appContext)
     }
 
@@ -41,6 +44,12 @@ object AppModule {
     private val deleteAlarmUseCase: DeleteAlarmUseCase by lazy {
         DeleteAlarmUseCase(repository, scheduler)
     }
+
+    fun provideShakeSensor(): IShakeSensor =
+        DataModule.provideShakeSensor(appContext)
+
+    fun provideBarcodeSensor(lifecycleOwner: LifecycleOwner): IBarcodeSensor =
+        DataModule.provideBarcodeScanner(appContext, lifecycleOwner)
 
     fun provideAlarmSetupViewModelFactory(): ViewModelProvider.Factory =
         object : ViewModelProvider.Factory {
