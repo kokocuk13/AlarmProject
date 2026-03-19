@@ -7,5 +7,6 @@ data class Alarm(
     val time: LocalTime,
     val isEnabled: Boolean,
     val task: DismissTask,
-    val name: String? = null
+    val name: String? = null,
+    val days: List<Int> = emptyList()
 )

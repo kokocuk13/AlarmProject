@@ -11,7 +11,10 @@ data class CreateAlarmParams(
     val time: LocalTime,
     val difficultyLevel: Int,
     val name: String? = null,
-    val barcodeValue: String? = null //Если указано, будет создана задача BarcodeTask, иначе ShakeTask
+    val days: List<Int> = emptyList(),
+    val taskType: String = "SHAKE",
+    val barcodeValue: String? = null,
+    val alarmId: Long = 0L
 )
 
 class CreateAlarmUseCase(
@@ -19,20 +22,23 @@ class CreateAlarmUseCase(
     private val scheduler: IAlarmScheduler
 ) {
     suspend fun invoke(params: CreateAlarmParams): Result<Unit> {
+        val task = if (params.taskType == "BARCODE" && !params.barcodeValue.isNullOrBlank()) {
+            BarcodeTask(requiredBarcode = params.barcodeValue, isCompleted = false)
+        } else {
+            ShakeTask(requiredShakes = params.difficultyLevel, isCompleted = false)
+        }
+
         val alarm = Alarm(
+            id = params.alarmId,
             time = params.time,
             isEnabled = true,
-            task = if (!params.barcodeValue.isNullOrBlank()) { //Если передано значение для штрихкода, создаем задачу BarcodeTask, иначе ShakeTask
-                BarcodeTask(requiredBarcode = params.barcodeValue, isCompleted = false)
-            } else {
-                ShakeTask(requiredShakes = params.difficultyLevel, isCompleted = false)
-            },
-            name = params.name
+            task = task,
+            name = params.name,
+            days = params.days
         )
 
         val saveResult = repository.saveAlarm(alarm)
         if (saveResult.isSuccess) {
-            // Планируем будильник с реальным id, назначенным базой данных
             val savedAlarm = saveResult.getOrThrow()
             scheduler.schedule(savedAlarm)
         }
