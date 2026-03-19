@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="barcode_scan_title">Сканируйте штрих-код</string>
+	<string name="barcode_preparing_camera">Подготовка камеры...</string>
+	<string name="barcode_camera_overlay_cd">Наложение камеры</string>
+</resources>
+
+

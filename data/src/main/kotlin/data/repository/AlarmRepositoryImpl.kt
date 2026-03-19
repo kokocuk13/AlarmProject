@@ -3,6 +3,7 @@ package data.repository
 import data.db.AlarmDao
 import data.db.AlarmEntity
 import domain.models.Alarm
+import domain.models.BarcodeTask
 import domain.models.ShakeTask
 import domain.repository.IAlarmRepository
 import kotlinx.coroutines.flow.Flow
@@ -48,14 +49,20 @@ class AlarmRepositoryImpl(private val dao: AlarmDao) : IAlarmRepository {
         minute = time.minute,
         isEnabled = isEnabled,
         name = name,
-        requiredShakes = (task as? ShakeTask)?.requiredShakes ?: 0
+        requiredShakes = (task as? ShakeTask)?.requiredShakes ?: 0,
+        taskType = if (task is BarcodeTask) "BARCODE" else "SHAKE",// Определяем тип задачи для хранения
+        requiredBarcode = (task as? BarcodeTask)?.requiredBarcode //Проверяем, если задача - BarcodeTask, сохраняем requiredBarcode, иначе null
     )
 
     private fun AlarmEntity.toDomain() = Alarm(
         id = id,
         time = java.time.LocalTime.of(hour, minute),
         isEnabled = isEnabled,
-        task = ShakeTask(requiredShakes = requiredShakes, isCompleted = false),
+        task = if (taskType == "BARCODE" && !requiredBarcode.isNullOrBlank()) { // Если тип задачи - BARCODE и requiredBarcode не пустой, создаем BarcodeTask, иначе ShakeTask
+            BarcodeTask(requiredBarcode = requiredBarcode, isCompleted = false)
+        } else {
+            ShakeTask(requiredShakes = requiredShakes, isCompleted = false)
+        },
         name = name
     )
 }

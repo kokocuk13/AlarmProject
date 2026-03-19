@@ -9,10 +9,13 @@ import data.scheduler.AndroidAlarmScheduler
 import domain.repository.IAlarmRepository
 import domain.repository.IBarcodeSensor
 import domain.repository.IShakeSensor
+import domain.repository.ISavedBarcodeRepository
 import domain.scheduler.IAlarmScheduler
 import domain.usecases.CreateAlarmUseCase
 import domain.usecases.DeleteAlarmUseCase
 import domain.usecases.GetAlarmsUseCase
+import domain.usecases.GetSavedBarcodesUseCase
+import domain.usecases.SaveScannedBarcodeUseCase
 import presentation.viewmodels.AlarmListViewModel
 import presentation.viewmodels.AlarmSetupViewModel
 
@@ -35,6 +38,10 @@ object AppModule {
         DataModule.provideRepository(appContext)
     }
 
+    private val savedBarcodeRepository: ISavedBarcodeRepository by lazy {
+        DataModule.provideSavedBarcodeRepository(appContext)
+    }
+
     // Use cases
     private val createAlarmUseCase: CreateAlarmUseCase by lazy {
         CreateAlarmUseCase(repository, scheduler)
@@ -48,12 +55,24 @@ object AppModule {
         DeleteAlarmUseCase(repository, scheduler)
     }
 
+    private val getSavedBarcodesUseCase: GetSavedBarcodesUseCase by lazy {
+        GetSavedBarcodesUseCase(savedBarcodeRepository)
+    }
+
+    private val saveScannedBarcodeUseCase: SaveScannedBarcodeUseCase by lazy {
+        SaveScannedBarcodeUseCase(savedBarcodeRepository)
+    }
+
     fun provideAlarmSetupViewModelFactory(): ViewModelProvider.Factory =
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(AlarmSetupViewModel::class.java)) {
                     @Suppress("UNCHECKED_CAST")
-                    return AlarmSetupViewModel(createAlarmUseCase) as T
+                    return AlarmSetupViewModel(
+                        createAlarmUseCase,
+                        getSavedBarcodesUseCase,
+                        saveScannedBarcodeUseCase
+                    ) as T
                 }
                 throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }

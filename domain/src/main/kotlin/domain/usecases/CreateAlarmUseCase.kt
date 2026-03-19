@@ -1,6 +1,7 @@
 package domain.usecases
 
 import domain.models.Alarm
+import domain.models.BarcodeTask
 import domain.models.ShakeTask
 import domain.repository.IAlarmRepository
 import domain.scheduler.IAlarmScheduler
@@ -9,7 +10,8 @@ import java.time.LocalTime
 data class CreateAlarmParams(
     val time: LocalTime,
     val difficultyLevel: Int,
-    val name: String? = null
+    val name: String? = null,
+    val barcodeValue: String? = null //Если указано, будет создана задача BarcodeTask, иначе ShakeTask
 )
 
 class CreateAlarmUseCase(
@@ -20,7 +22,11 @@ class CreateAlarmUseCase(
         val alarm = Alarm(
             time = params.time,
             isEnabled = true,
-            task = ShakeTask(requiredShakes = params.difficultyLevel, isCompleted = false),
+            task = if (!params.barcodeValue.isNullOrBlank()) { //Если передано значение для штрихкода, создаем задачу BarcodeTask, иначе ShakeTask
+                BarcodeTask(requiredBarcode = params.barcodeValue, isCompleted = false)
+            } else {
+                ShakeTask(requiredShakes = params.difficultyLevel, isCompleted = false)
+            },
             name = params.name
         )
 

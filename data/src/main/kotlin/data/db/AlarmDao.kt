@@ -25,4 +25,16 @@ interface AlarmDao {
     /** Возвращает будильник по id. */
     @Query("SELECT * FROM alarms WHERE id = :id")
     suspend fun getById(id: Long): AlarmEntity?
+    //Новые операции для штрих-кода
+    /** Сохраняет отсканированный штрих-код. */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSavedBarcode(barcode: SavedBarcodeEntity): Long
+
+    /** Возвращает ранее сохраненные штрих-коды (сначала новые). */
+    @Query("SELECT * FROM saved_barcodes ORDER BY createdAt DESC")
+    fun getSavedBarcodes(): Flow<List<SavedBarcodeEntity>>
+
+    /** Ищет уже сохраненный штрих-код по значению. */
+    @Query("SELECT * FROM saved_barcodes WHERE codeValue = :codeValue LIMIT 1")
+    suspend fun findSavedBarcodeByValue(codeValue: String): SavedBarcodeEntity?
 }

@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase
  * Room-база данных приложения.
  * Синглтон — используйте AlarmDatabase.getInstance(context) для получения экземпляра.
  */
-@Database(entities = [AlarmEntity::class], version = 1, exportSchema = false)
+@Database(entities = [AlarmEntity::class, SavedBarcodeEntity::class], version = 2, exportSchema = false) // version 2 — добавлено поле requiredBarcode для поддержки будильников с задачей по штрих-коду и saveBarcode добавил сущность для сохранения отсканированных штрих-кодов
 abstract class AlarmDatabase : RoomDatabase() {
 
     abstract fun alarmDao(): AlarmDao
@@ -24,7 +24,9 @@ abstract class AlarmDatabase : RoomDatabase() {
                     context.applicationContext,
                     AlarmDatabase::class.java,
                     "alarm_database"
-                ).build().also { INSTANCE = it }
+                )
+                    .fallbackToDestructiveMigration()
+                    .build().also { INSTANCE = it }
             }
         }
     }
