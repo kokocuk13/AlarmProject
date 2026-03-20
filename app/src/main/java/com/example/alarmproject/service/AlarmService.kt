@@ -23,6 +23,13 @@ class AlarmService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val action = intent?.action
+        
+        if (action == ACTION_STOP) {
+            Log.d("ALARM_DEBUG", "AlarmService: ACTION_STOP received")
+            stopAlarm()
+            return START_NOT_STICKY
+        }
+
         val alarmId = intent?.getLongExtra("ALARM_ID", -1L) ?: -1L
         val melodyUri = intent?.getStringExtra("ALARM_MELODY_URI")
         val alarmName = intent?.getStringExtra("ALARM_NAME") ?: "Будильник"
@@ -32,21 +39,17 @@ class AlarmService : Service() {
         val requiredShakes = intent?.getIntExtra(MainActivity.EXTRA_REQUIRED_SHAKES, 20)
         val requiredBarcode = intent?.getStringExtra(MainActivity.EXTRA_REQUIRED_BARCODE)
 
-        if (action == ACTION_STOP) {
-            Log.d("ALARM_DEBUG", "AlarmService: ACTION_STOP received")
-            stopAlarm()
-            return START_NOT_STICKY
-        }
+        // Сохраняем данные для MainActivity
+        currentAlarmData = AlarmData(
+            alarmId, alarmName, hour, minute, melodyUri, taskType, requiredShakes, requiredBarcode
+        )
 
         Log.d("ALARM_DEBUG", "AlarmService: Starting alarm for ID: $alarmId")
 
-        // 1. Создаем уведомление
         val notification = createNotification(
             alarmId, alarmName, hour, minute, taskType, requiredShakes, requiredBarcode
         )
 
-        // 2. СРАЗУ переводим сервис в Foreground, чтобы избежать ForegroundServiceDidNotStartInTimeException.
-        // На Android 14+ (API 34) ОБЯЗАТЕЛЬНО указывать foregroundServiceType, если он указан в манифесте.
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 startForeground(
@@ -63,7 +66,6 @@ class AlarmService : Service() {
             return START_NOT_STICKY
         }
 
-        // 3. Запускаем музыку и вибрацию
         MelodyPlayer.start(this, melodyUri)
         startVibration()
 
@@ -71,7 +73,6 @@ class AlarmService : Service() {
     }
 
     private fun startVibration() {
-        Log.d("ALARM_DEBUG", "AlarmService: startVibration() called")
         try {
             vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
@@ -81,12 +82,10 @@ class AlarmService : Service() {
                 getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
             }
 
-            val pattern = longArrayOf(0, 500, 1000) // задержка 0, вибрация 500мс, пауза 1000мс
+            val pattern = longArrayOf(0, 500, 1000)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                Log.d("ALARM_DEBUG", "AlarmService: Using VibrationEffect (API >= 26)")
                 vibrator?.vibrate(VibrationEffect.createWaveform(pattern, 0))
             } else {
-                Log.d("ALARM_DEBUG", "AlarmService: Using classic vibrate (API < 26)")
                 @Suppress("DEPRECATION")
                 vibrator?.vibrate(pattern, 0)
             }
@@ -97,6 +96,7 @@ class AlarmService : Service() {
 
     private fun stopAlarm() {
         Log.d("ALARM_DEBUG", "AlarmService: stopAlarm() called")
+        currentAlarmData = null
         MelodyPlayer.stop()
         vibrator?.cancel()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -158,15 +158,31 @@ class AlarmService : Service() {
     }
 
     override fun onDestroy() {
+        currentAlarmData = null
         vibrator?.cancel()
         super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    data class AlarmData(
+        val id: Long,
+        val name: String,
+        val hour: Int,
+        val minute: Int,
+        val melodyUri: String?,
+        val taskType: String?,
+        val requiredShakes: Int?,
+        val requiredBarcode: String?
+    )
+
     companion object {
         const val ACTION_STOP = "STOP_ALARM_SERVICE"
         
+        // Статическая переменная для доступа из Activity
+        var currentAlarmData: AlarmData? = null
+            private set
+
         fun start(context: Context, alarmId: Long, name: String, hour: Int, minute: Int, melodyUri: String?, taskType: String?, shakes: Int?, barcode: String?) {
             val intent = Intent(context, AlarmService::class.java).apply {
                 putExtra("ALARM_ID", alarmId)
