@@ -21,7 +21,10 @@ class AndroidAlarmScheduler(
         context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     override fun schedule(alarm: Alarm) {
-        val now = Calendar.getInstance()
+        if (!alarm.isEnabled) {
+            cancel(alarm)
+            return
+        }
 
         val pendingIntent = buildPendingIntent(alarm, PendingIntent.FLAG_UPDATE_CURRENT)
         val calendar = Calendar.getInstance().apply {
@@ -30,27 +33,46 @@ class AndroidAlarmScheduler(
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
 
-            if (timeInMillis <= System.currentTimeMillis()) {
-                add(Calendar.DAY_OF_MONTH, 1)
-                Log.d("ALARM_DEBUG", "Target time already passed today. Scheduled for tomorrow.")
+            if (alarm.days.isEmpty()) {
+                // Единоразовый будильник
+                if (timeInMillis <= System.currentTimeMillis()) {
+                    add(Calendar.DAY_OF_MONTH, 1)
+                }
+            } else {
+                // Повторяющийся будильник: ищем ближайший день (0=ПН, 6=ВС)
+                val todayCalendar = get(Calendar.DAY_OF_WEEK)
+                val todayFormatted = if (todayCalendar == Calendar.SUNDAY) 6 else todayCalendar - 2
+                
+                var daysUntilNext = -1
+                if (alarm.days.contains(todayFormatted) && timeInMillis > System.currentTimeMillis()) {
+                    daysUntilNext = 0
+                } else {
+                    for (i in 1..7) {
+                        val nextDay = (todayFormatted + i) % 7
+                        if (alarm.days.contains(nextDay)) {
+                            daysUntilNext = i
+                            break
+                        }
+                    }
+                }
+                
+                if (daysUntilNext != -1) {
+                    add(Calendar.DAY_OF_MONTH, daysUntilNext)
+                }
             }
         }
 
         val triggerAtMillis = calendar.timeInMillis
         Log.d("ALARM_DEBUG", "Scheduling alarm ${alarm.id} for ${calendar.time} (millis: $triggerAtMillis)")
-        Log.d("ALARM_DEBUG", "Current system time: ${System.currentTimeMillis()}")
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
-            Log.w("ALARM_DEBUG", "Exact alarms NOT allowed. Using inexact fallback.")
             alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
             return
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Log.d("ALARM_DEBUG", "Using setExactAndAllowWhileIdle")
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
         } else {
-            Log.d("ALARM_DEBUG", "Using setExact")
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
         }
     }
@@ -58,16 +80,15 @@ class AndroidAlarmScheduler(
     override fun cancel(alarm: Alarm) {
         Log.d("ALARM_DEBUG", "Cancelling alarm ${alarm.id}")
         val intent = Intent(context, receiverClass)
-
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             alarm.id.toInt(),
             intent,
             PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
         )
-
         pendingIntent?.let {
             alarmManager.cancel(it)
+            it.cancel()
         }
     }
 
@@ -75,7 +96,6 @@ class AndroidAlarmScheduler(
         val intent = Intent(context, receiverClass).apply {
             putExtra("ALARM_ID", alarm.id)
         }
-
         return PendingIntent.getBroadcast(
             context,
             alarm.id.toInt(),

@@ -1,6 +1,7 @@
 package com.example.alarmproject.di
 
 import android.content.Context
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.alarmproject.receiver.AlarmReceiver
@@ -9,10 +10,14 @@ import data.scheduler.AndroidAlarmScheduler
 import domain.repository.IAlarmRepository
 import domain.repository.IBarcodeSensor
 import domain.repository.IShakeSensor
+import domain.repository.ISavedBarcodeRepository
 import domain.scheduler.IAlarmScheduler
 import domain.usecases.CreateAlarmUseCase
 import domain.usecases.DeleteAlarmUseCase
 import domain.usecases.GetAlarmsUseCase
+import domain.usecases.GetSavedBarcodesUseCase
+import domain.usecases.SaveScannedBarcodeUseCase
+import domain.usecases.UpdateAlarmUseCase
 import presentation.viewmodels.AlarmListViewModel
 import presentation.viewmodels.AlarmSetupViewModel
 
@@ -20,22 +25,24 @@ object AppModule {
 
     private lateinit var appContext: Context
 
-    /** Вызывать один раз из AlarmApp.onCreate(). */
     fun init(context: Context) {
         appContext = context.applicationContext
     }
 
-    // Scheduler
     private val scheduler: IAlarmScheduler by lazy {
         AndroidAlarmScheduler(appContext, AlarmReceiver::class.java)
     }
 
-    // Room
-    val repository: IAlarmRepository by lazy {
+    internal val repository: IAlarmRepository by lazy {
         DataModule.provideRepository(appContext)
     }
 
+    private val savedBarcodeRepository: ISavedBarcodeRepository by lazy {
+        DataModule.provideSavedBarcodeRepository(appContext)
+    }
+
     // Use cases
+
     private val createAlarmUseCase: CreateAlarmUseCase by lazy {
         CreateAlarmUseCase(repository, scheduler)
     }
@@ -44,16 +51,39 @@ object AppModule {
         GetAlarmsUseCase(repository)
     }
 
+    private val updateAlarmUseCase: UpdateAlarmUseCase by lazy {
+        UpdateAlarmUseCase(repository, scheduler)
+    }
+
     private val deleteAlarmUseCase: DeleteAlarmUseCase by lazy {
         DeleteAlarmUseCase(repository, scheduler)
     }
+
+    private val getSavedBarcodesUseCase: GetSavedBarcodesUseCase by lazy {
+        GetSavedBarcodesUseCase(savedBarcodeRepository)
+    }
+
+    private val saveScannedBarcodeUseCase: SaveScannedBarcodeUseCase by lazy {
+        SaveScannedBarcodeUseCase(savedBarcodeRepository)
+    }
+
+    fun provideShakeSensor(): IShakeSensor =
+        DataModule.provideShakeSensor(appContext)
+
+    fun provideBarcodeSensor(lifecycleOwner: LifecycleOwner): IBarcodeSensor =
+        DataModule.provideBarcodeScanner(appContext, lifecycleOwner)
 
     fun provideAlarmSetupViewModelFactory(): ViewModelProvider.Factory =
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(AlarmSetupViewModel::class.java)) {
                     @Suppress("UNCHECKED_CAST")
-                    return AlarmSetupViewModel(createAlarmUseCase) as T
+                    return AlarmSetupViewModel(
+                        createAlarmUseCase,
+                        getAlarmsUseCase,
+                        getSavedBarcodesUseCase,
+                        saveScannedBarcodeUseCase
+                    ) as T
                 }
                 throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }
@@ -62,17 +92,8 @@ object AppModule {
     fun provideAlarmListViewModelFactory(): ViewModelProvider.Factory =
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                if (modelClass.isAssignableFrom(AlarmListViewModel::class.java)) {
-                    @Suppress("UNCHECKED_CAST")
-                    return AlarmListViewModel(getAlarmsUseCase, deleteAlarmUseCase) as T
-                }
-                throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+                @Suppress("UNCHECKED_CAST")
+                return AlarmListViewModel(getAlarmsUseCase, deleteAlarmUseCase, updateAlarmUseCase) as T
             }
         }
-
-    fun provideShakeSensor(): IShakeSensor =
-        DataModule.provideShakeSensor(appContext)
-
-    fun provideBarcodeSensor(lifecycleOwner: androidx.lifecycle.LifecycleOwner): IBarcodeSensor =
-        DataModule.provideBarcodeScanner(appContext, lifecycleOwner)
 }

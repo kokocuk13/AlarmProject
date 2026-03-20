@@ -50,7 +50,11 @@
     <fragment
         android:id="@+id/alarmSetupFragment"
         android:name="presentation.ui.AlarmSetupFragment"
-        android:label="AlarmSetupFragment" />
+        android:label="AlarmSetupFragment">
+        <action
+            android:id="@+id/action_alarm_setup_to_barcode"
+            app:destination="@id/barcodeScanFragment" />
+    </fragment>
 
     <!-- Alarm Ringing -->
     <fragment

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="barcode_scan_title">Сканируйте штрих-код</string>
+    <string name="barcode_preparing_camera">Подготовка камеры...</string>
+    <string name="barcode_camera_overlay_cd">Наложение камеры</string>
+
+    <string name="setup_title">Настройка будильника</string>
+    <string name="time_separator">:</string>
+    <string name="day_mon">ПН</string>
+    <string name="day_tue">ВТ</string>
+    <string name="day_wed">СР</string>
+    <string name="day_thu">ЧТ</string>
+    <string name="day_fri">ПТ</string>
+    <string name="day_sat">СБ</string>
+    <string name="day_sun">ВС</string>
+
+    <string name="task_shake_cd">Тряска</string>
+    <string name="task_shake_label">Трясти телефон</string>
+    <string name="task_barcode_cd">Штрих-код</string>
+    <string name="task_barcode_label">Штрих-код</string>
+
+    <string name="shake_count_label">Количество встряхиваний</string>
+    <string name="scan_barcode_btn">Сканировать штрих-код</string>
+    <string name="barcode_not_selected">Штрих-код не выбран</string>
+
+    <string name="melody_label">Мелодия</string>
+    <string name="melody_default">Звуки природы</string>
+    <string name="select_melody_cd">Выбрать</string>
+
+    <string name="alarm_name_hint">Название будильника</string>
+    <string name="save_button">СОХРАНИТЬ</string>
+
+    <string name="ringing_task_instruction">Выполните задание для отключения</string>
+    <string name="ringing_volume_info">Увеличение громкости через: 15 секунд</string>
+    <string name="ringing_dismiss_btn">Выполнить задание</string>
+    <string name="alarm_logo_cd">Логотип будильника</string>
+</resources>

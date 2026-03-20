@@ -8,9 +8,10 @@
 
     <ImageView
         android:id="@+id/bellIcon"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:src="@android:drawable/ic_lock_idle_alarm"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:src="@drawable/ic_alarm_logo"
+        android:contentDescription="@string/alarm_logo_cd"
         app:layout_constraintBottom_toTopOf="@+id/ringingTitle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,27 +23,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="Выполните задание для отключения"
+        android:text="@string/ringing_task_instruction"
         android:textAlignment="center"
         android:textColor="#000000"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/ringingSubtitle"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/bellIcon" />
-
-    <TextView
-        android:id="@+id/ringingSubtitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Увеличение громкости через: 15 секунд"
-        android:textColor="#666666"
         app:layout_constraintBottom_toTopOf="@+id/dismissButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ringingTitle" />
+        app:layout_constraintTop_toBottomOf="@+id/bellIcon" />
 
     <Button
         android:id="@+id/dismissButton"
@@ -50,9 +39,10 @@
         android:layout_height="56dp"
         android:layout_marginBottom="32dp"
         android:backgroundTint="#6B4EFF"
-        android:text="Выполнить задание"
+        android:text="@string/ringing_dismiss_btn"
         android:textAllCaps="false"
         android:textColor="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ringingTitle" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
