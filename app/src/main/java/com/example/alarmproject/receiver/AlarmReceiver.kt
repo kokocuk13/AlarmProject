@@ -37,6 +37,11 @@ class AlarmReceiver : BroadcastReceiver() {
                 val alarm = result.getOrNull()
 
                 if (alarm != null) {
+                    if (alarm.days.isEmpty()) {
+                        // Если будильник единоразовый, выключаем его после срабатывания
+                        AppModule.repository.saveAlarm(alarm.copy(isEnabled = false))
+                    }
+
                     Log.d("ALARM_DEBUG", "AlarmReceiver: Alarm found: ${alarm.name}. Starting AlarmService.")
                     
                     val taskType = when (alarm.task) {
