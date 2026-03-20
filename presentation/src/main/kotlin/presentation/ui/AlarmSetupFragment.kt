@@ -308,6 +308,7 @@ class AlarmSetupFragment : Fragment() {
     }
 
 
+
     private fun applyDismissMethodUi(
         shakeCard: LinearLayout,
         barcodeCard: LinearLayout,
