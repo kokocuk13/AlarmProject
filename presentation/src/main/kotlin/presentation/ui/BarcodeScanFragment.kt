@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -65,22 +66,29 @@ class BarcodeScanFragment : Fragment() {
 
     private fun startScanning() {
         statusText.text = "Камера запущена, наведите на штрих-код"
-        barcodeSensor = PresentationDependencies.provideBarcodeSensor(this)//Вид камеры
+        barcodeSensor = PresentationDependencies.provideBarcodeSensor(this)
         barcodeSensor?.start { scannedValue ->
             if (!isAdded) return@start
             requireActivity().runOnUiThread {
                 val expected = expectedBarcode
                 val success = expected.isNullOrBlank() || expected == scannedValue
                 if (success) {
+                    Log.d("ALARM_DEBUG", "BarcodeScanFragment: success for alarmId: $alarmId")
                     barcodeSensor?.stop()
 
                     val launchedFromSetup =
                         findNavController().previousBackStackEntry?.destination?.id == R.id.alarmSetupFragment
 
-                    if (!launchedFromSetup && alarmId != -1L) {
-                        val notificationManager =
-                            requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                        notificationManager.cancel(alarmId.toInt())
+                    if (!launchedFromSetup) {
+                        Log.d("ALARM_DEBUG", "BarcodeScanFragment: stopping service via delegate")
+                        // Останавливаем сервис через делегат
+                        PresentationDependencies.stopAlarmService?.invoke()
+
+                        if (alarmId != -1L) {
+                            val notificationManager =
+                                requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                            notificationManager.cancel(alarmId.toInt())
+                        }
 
                         findNavController().navigate(R.id.action_barcode_to_success)
                     } else {
@@ -105,6 +113,6 @@ class BarcodeScanFragment : Fragment() {
 
     companion object {
         const val ARG_REQUIRED_BARCODE = "required_barcode"
-        const val RESULT_SCANNED_BARCODE = "result_scanned_barcode" // Ключ для передачи отсканированного штрих-кода обратно в AlarmRingingFragment, это нужно когда мы хотим, чтобы пользователь мог отсканировать любой штрих-код для отключения будильника, а не только заранее заданный. В этом случае мы будем передавать отсканированный код обратно в AlarmRingingFragment, чтобы он мог его обработать и отключить будильник.
+        const val RESULT_SCANNED_BARCODE = "result_scanned_barcode"
     }
 }

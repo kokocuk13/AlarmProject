@@ -1,6 +1,10 @@
 package presentation.ui
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
+import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +16,7 @@ import android.widget.NumberPicker
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.graphics.toColorInt
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -34,9 +39,20 @@ class AlarmSetupFragment : Fragment() {
 
     private var isShakeSelected = true
     private var selectedBarcodeValue: String? = null
+    private var selectedMelodyUri: String? = null
     private val selectedDays = mutableSetOf<Int>()
     private var editingAlarmId = -1L
     private var dataLoaded = false
+
+    private val melodyPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val uri: Uri? = result.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+            selectedMelodyUri = uri?.toString()
+            updateMelodyText()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -77,6 +93,8 @@ class AlarmSetupFragment : Fragment() {
                     if (!alarm.name.isNullOrBlank()) nameInput.setText(alarm.name)
                     selectedDays.clear()
                     selectedDays.addAll(alarm.days)
+                    selectedMelodyUri = alarm.melodyUri
+                    updateMelodyText()
                     val task = alarm.task
                     when (task) {
                         is BarcodeTask -> {
@@ -104,6 +122,9 @@ class AlarmSetupFragment : Fragment() {
             updateDayButtons(dayButtons)
             shakeContainer.visibility = View.VISIBLE
             updateDismissCards(shakeCard, barcodeCard)
+            // По умолчанию ставим стандартную мелодию будильника
+            selectedMelodyUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM).toString()
+            updateMelodyText()
         }
 
         dayButtons.forEachIndexed { index, button ->
@@ -135,6 +156,10 @@ class AlarmSetupFragment : Fragment() {
             showBarcodePickDialog()
         }
 
+        view.findViewById<LinearLayout>(R.id.melodyRow).setOnClickListener {
+            pickMelody()
+        }
+
         findNavController().currentBackStackEntry
             ?.savedStateHandle
             ?.getLiveData<String>(BarcodeScanFragment.RESULT_SCANNED_BARCODE)
@@ -161,7 +186,8 @@ class AlarmSetupFragment : Fragment() {
                 days     = selectedDays.toList(),
                 taskType = if (isShakeSelected) "SHAKE" else "BARCODE",
                 barcodeValue = selectedBarcodeValue,
-                alarmId  = if (editingAlarmId != -1L) editingAlarmId else 0L
+                alarmId  = if (editingAlarmId != -1L) editingAlarmId else 0L,
+                melodyUri = selectedMelodyUri
             )
         }
 
@@ -180,6 +206,28 @@ class AlarmSetupFragment : Fragment() {
                     else -> saveButton.isEnabled = true
                 }
             }
+        }
+    }
+
+    private fun pickMelody() {
+        val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+            putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM)
+            putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Выберите мелодию")
+            putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, selectedMelodyUri?.let { Uri.parse(it) })
+            putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+            putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+        }
+        melodyPickerLauncher.launch(intent)
+    }
+
+    private fun updateMelodyText() {
+        val melodyNameView = view?.findViewById<TextView>(R.id.melodyName) ?: return
+        if (selectedMelodyUri == null) {
+            melodyNameView.text = getString(R.string.melody_default)
+        } else {
+            val uri = Uri.parse(selectedMelodyUri)
+            val ringtone = RingtoneManager.getRingtone(requireContext(), uri)
+            melodyNameView.text = ringtone?.getTitle(requireContext()) ?: "Неизвестная мелодия"
         }
     }
 

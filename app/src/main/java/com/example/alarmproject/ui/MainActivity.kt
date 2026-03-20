@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
         val alarmName = intent.getStringExtra("ALARM_NAME") ?: "Будильник"
         val hour = intent.getIntExtra("ALARM_HOUR", 0)
         val minute = intent.getIntExtra("ALARM_MINUTE", 0)
+        val melodyUri = intent.getStringExtra("ALARM_MELODY_URI")
 
         val bundle = bundleOf(
             "ALARM_ID" to alarmId,
@@ -58,7 +59,8 @@ class MainActivity : AppCompatActivity() {
             "minute" to minute,
             AlarmRingingFragment.ARG_TASK_TYPE to taskType,
             AlarmRingingFragment.ARG_REQUIRED_SHAKES to intent.getIntExtra(EXTRA_REQUIRED_SHAKES, 20),
-            AlarmRingingFragment.ARG_REQUIRED_BARCODE to intent.getStringExtra(EXTRA_REQUIRED_BARCODE)
+            AlarmRingingFragment.ARG_REQUIRED_BARCODE to intent.getStringExtra(EXTRA_REQUIRED_BARCODE),
+            "ALARM_MELODY_URI" to melodyUri
         )
 
         navController.navigate(

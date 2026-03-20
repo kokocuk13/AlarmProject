@@ -30,7 +30,10 @@ class AlarmRingingFragment : Fragment() {
         val taskType = arguments?.getString(ARG_TASK_TYPE) ?: TASK_SHAKE
         val requiredShakes = arguments?.getInt(ARG_REQUIRED_SHAKES) ?: 20
         val requiredBarcode = arguments?.getString(ARG_REQUIRED_BARCODE)
+        val melodyUri = arguments?.getString("ALARM_MELODY_URI")
         
+        // Музыка теперь запускается в AlarmService, здесь ее повторно запускать не нужно.
+
         view.findViewById<TextView>(R.id.ringingTitle).text = 
             String.format("%s\n%02d:%02d", name, hour, minute)
 
@@ -39,7 +42,8 @@ class AlarmRingingFragment : Fragment() {
                 ARG_ALARM_ID to alarmId,
                 "name" to name,
                 "hour" to hour,
-                "minute" to minute
+                "minute" to minute,
+                "ALARM_MELODY_URI" to melodyUri
             )
 
             if (taskType.equals(TASK_BARCODE, ignoreCase = true)) {
