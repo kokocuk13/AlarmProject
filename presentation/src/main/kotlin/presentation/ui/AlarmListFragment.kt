@@ -26,6 +26,7 @@ import presentation.R
 import presentation.di.PresentationDependencies
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import presentation.viewmodels.AlarmListViewModel
+import java.util.Locale
 
 class AlarmListFragment : Fragment() {
 
@@ -56,6 +57,9 @@ class AlarmListFragment : Fragment() {
                     R.id.action_home_to_setup,
                     bundleOf("alarmId" to alarm.id)
                 )
+            },
+            onToggleClick = { alarm, isEnabled ->
+                viewModel.toggleAlarm(alarm, isEnabled)
             }
         )
         recyclerView.adapter = adapter
@@ -64,7 +68,7 @@ class AlarmListFragment : Fragment() {
             override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                val pos = viewHolder.adapterPosition
+                val pos = viewHolder.bindingAdapterPosition
                 if (pos != RecyclerView.NO_POSITION) viewModel.deleteAlarm(adapter.getAlarmAt(pos))
             }
 
@@ -103,7 +107,8 @@ class AlarmListFragment : Fragment() {
 
 class AlarmAdapter(
     private val onDeleteClick: (Alarm) -> Unit,
-    private val onEditClick:   (Alarm) -> Unit = {}
+    private val onEditClick:   (Alarm) -> Unit = {},
+    private val onToggleClick: (Alarm, Boolean) -> Unit
 ) : RecyclerView.Adapter<AlarmAdapter.ViewHolder>() {
 
     private val alarms = mutableListOf<Alarm>()
@@ -138,10 +143,16 @@ class AlarmAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val alarm = alarms[position]
-        holder.timeText.text    = String.format("%02d:%02d", alarm.time.hour, alarm.time.minute)
+        holder.timeText.text    = String.format(Locale.getDefault(), "%02d:%02d", alarm.time.hour, alarm.time.minute)
         holder.nameText.text    = alarm.name?.takeIf { it.isNotBlank() } ?: "Будильник"
         holder.daysText.text    = formatDays(alarm.days)
+        
+        holder.switch.setOnCheckedChangeListener(null)
         holder.switch.isChecked = alarm.isEnabled
+        holder.switch.setOnCheckedChangeListener { _, isChecked ->
+            onToggleClick(alarm, isChecked)
+        }
+
         holder.taskBadge.text   = when (val task = alarm.task) {
             is ShakeTask   -> "Встряска × ${task.requiredShakes}"
             is BarcodeTask -> "Штрих-код"

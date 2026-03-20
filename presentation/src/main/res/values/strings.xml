@@ -29,4 +29,9 @@
 
     <string name="alarm_name_hint">Название будильника</string>
     <string name="save_button">СОХРАНИТЬ</string>
+
+    <string name="ringing_task_instruction">Выполните задание для отключения</string>
+    <string name="ringing_volume_info">Увеличение громкости через: 15 секунд</string>
+    <string name="ringing_dismiss_btn">Выполнить задание</string>
+    <string name="alarm_logo_cd">Логотип будильника</string>
 </resources>

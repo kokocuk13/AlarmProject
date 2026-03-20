@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import domain.models.Alarm
 import domain.usecases.DeleteAlarmUseCase
 import domain.usecases.GetAlarmsUseCase
+import domain.usecases.UpdateAlarmUseCase
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -16,7 +17,8 @@ import kotlinx.coroutines.launch
  */
 class AlarmListViewModel(
     private val getAlarmsUseCase: GetAlarmsUseCase,
-    private val deleteAlarmUseCase: DeleteAlarmUseCase
+    private val deleteAlarmUseCase: DeleteAlarmUseCase,
+    private val updateAlarmUseCase: UpdateAlarmUseCase
 ) : ViewModel() {
 
     /** Живой StateFlow со списком будильников. Обновляется автоматически при изменениях в БД. */
@@ -31,6 +33,14 @@ class AlarmListViewModel(
     fun deleteAlarm(alarm: Alarm) {
         viewModelScope.launch {
             deleteAlarmUseCase(alarm)
+        }
+    }
+
+    /** Переключает состояние будильника (вкл/выкл) и обновляет системное расписание. */
+    fun toggleAlarm(alarm: Alarm, isEnabled: Boolean) {
+        if (alarm.isEnabled == isEnabled) return
+        viewModelScope.launch {
+            updateAlarmUseCase(alarm.copy(isEnabled = isEnabled))
         }
     }
 }

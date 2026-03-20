@@ -17,6 +17,7 @@ import domain.usecases.DeleteAlarmUseCase
 import domain.usecases.GetAlarmsUseCase
 import domain.usecases.GetSavedBarcodesUseCase
 import domain.usecases.SaveScannedBarcodeUseCase
+import domain.usecases.UpdateAlarmUseCase
 import presentation.viewmodels.AlarmListViewModel
 import presentation.viewmodels.AlarmSetupViewModel
 
@@ -48,6 +49,10 @@ object AppModule {
 
     private val getAlarmsUseCase: GetAlarmsUseCase by lazy {
         GetAlarmsUseCase(repository)
+    }
+
+    private val updateAlarmUseCase: UpdateAlarmUseCase by lazy {
+        UpdateAlarmUseCase(repository, scheduler)
     }
 
     private val deleteAlarmUseCase: DeleteAlarmUseCase by lazy {
@@ -88,7 +93,7 @@ object AppModule {
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 @Suppress("UNCHECKED_CAST")
-                return AlarmListViewModel(getAlarmsUseCase, deleteAlarmUseCase) as T
+                return AlarmListViewModel(getAlarmsUseCase, deleteAlarmUseCase, updateAlarmUseCase) as T
             }
         }
 }

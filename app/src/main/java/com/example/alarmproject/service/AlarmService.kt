@@ -16,6 +16,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.alarmproject.ui.MainActivity
 import presentation.utils.MelodyPlayer
+import java.util.Locale
 
 class AlarmService : Service() {
 
@@ -79,16 +80,11 @@ class AlarmService : Service() {
                 vibratorManager?.defaultVibrator
             } else {
                 @Suppress("DEPRECATION")
-                getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                getSystemService(VIBRATOR_SERVICE) as? Vibrator
             }
 
             val pattern = longArrayOf(0, 500, 1000)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator?.vibrate(VibrationEffect.createWaveform(pattern, 0))
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator?.vibrate(pattern, 0)
-            }
+            vibrator?.vibrate(VibrationEffect.createWaveform(pattern, 0))
         } catch (e: Exception) {
             Log.e("ALARM_DEBUG", "AlarmService: startVibration() failed", e)
         }
@@ -99,12 +95,7 @@ class AlarmService : Service() {
         currentAlarmData = null
         MelodyPlayer.stop()
         vibrator?.cancel()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-        } else {
-            @Suppress("DEPRECATION")
-            stopForeground(true)
-        }
+        stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
@@ -118,17 +109,15 @@ class AlarmService : Service() {
         requiredBarcode: String?
     ): android.app.Notification {
         val channelId = "alarm_service_channel"
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId, "Будильник работает", NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                setSound(null, null)
-                enableVibration(true)
-            }
-            notificationManager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            channelId, "Будильник работает", NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            setSound(null, null)
+            enableVibration(true)
         }
+        notificationManager.createNotificationChannel(channel)
 
         val activityIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -149,7 +138,7 @@ class AlarmService : Service() {
         return NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentTitle(name)
-            .setContentText("Пора вставать! ($hour:$minute)")
+            .setContentText(String.format(Locale.getDefault(), "%02d:%02d", hour, minute))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setFullScreenIntent(pendingIntent, true)
@@ -194,11 +183,7 @@ class AlarmService : Service() {
                 putExtra(MainActivity.EXTRA_REQUIRED_SHAKES, shakes)
                 putExtra(MainActivity.EXTRA_REQUIRED_BARCODE, barcode)
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            context.startForegroundService(intent)
         }
 
         fun stop(context: Context) {
