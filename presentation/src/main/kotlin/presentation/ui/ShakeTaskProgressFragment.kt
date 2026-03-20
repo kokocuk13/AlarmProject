@@ -3,6 +3,7 @@ package presentation.ui
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -70,9 +71,10 @@ class ShakeTaskProgressFragment : Fragment() {
     }
 
     private fun completeTask() {
+        Log.d("ALARM_DEBUG", "ShakeTaskProgressFragment: completeTask() for alarmId: $alarmId")
         shakeSensor?.stop()
         
-        // Останавливаем сервис через делегат, чтобы избежать прямой зависимости между модулями
+        // Останавливаем сервис через делегат
         PresentationDependencies.stopAlarmService?.invoke()
 
         if (alarmId != -1L) {

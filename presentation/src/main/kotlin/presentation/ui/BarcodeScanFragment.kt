@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -72,18 +73,22 @@ class BarcodeScanFragment : Fragment() {
                 val expected = expectedBarcode
                 val success = expected.isNullOrBlank() || expected == scannedValue
                 if (success) {
+                    Log.d("ALARM_DEBUG", "BarcodeScanFragment: success for alarmId: $alarmId")
                     barcodeSensor?.stop()
 
                     val launchedFromSetup =
                         findNavController().previousBackStackEntry?.destination?.id == R.id.alarmSetupFragment
 
-                    if (!launchedFromSetup && alarmId != -1L) {
+                    if (!launchedFromSetup) {
+                        Log.d("ALARM_DEBUG", "BarcodeScanFragment: stopping service via delegate")
                         // Останавливаем сервис через делегат
                         PresentationDependencies.stopAlarmService?.invoke()
 
-                        val notificationManager =
-                            requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                        notificationManager.cancel(alarmId.toInt())
+                        if (alarmId != -1L) {
+                            val notificationManager =
+                                requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                            notificationManager.cancel(alarmId.toInt())
+                        }
 
                         findNavController().navigate(R.id.action_barcode_to_success)
                     } else {

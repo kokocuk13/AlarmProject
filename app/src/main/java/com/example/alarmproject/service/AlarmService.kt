@@ -6,13 +6,20 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.alarmproject.ui.MainActivity
 import presentation.utils.MelodyPlayer
 
 class AlarmService : Service() {
+
+    private var vibrator: Vibrator? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val action = intent?.action
@@ -26,22 +33,79 @@ class AlarmService : Service() {
         val requiredBarcode = intent?.getStringExtra(MainActivity.EXTRA_REQUIRED_BARCODE)
 
         if (action == ACTION_STOP) {
-            MelodyPlayer.stop()
-            stopForeground(true)
+            Log.d("ALARM_DEBUG", "AlarmService: ACTION_STOP received")
+            stopAlarm()
+            return START_NOT_STICKY
+        }
+
+        Log.d("ALARM_DEBUG", "AlarmService: Starting alarm for ID: $alarmId")
+
+        // 1. Создаем уведомление
+        val notification = createNotification(
+            alarmId, alarmName, hour, minute, taskType, requiredShakes, requiredBarcode
+        )
+
+        // 2. СРАЗУ переводим сервис в Foreground, чтобы избежать ForegroundServiceDidNotStartInTimeException.
+        // На Android 14+ (API 34) ОБЯЗАТЕЛЬНО указывать foregroundServiceType, если он указан в манифесте.
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(
+                    alarmId.toInt().coerceAtLeast(1),
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                )
+            } else {
+                startForeground(alarmId.toInt().coerceAtLeast(1), notification)
+            }
+        } catch (e: Exception) {
+            Log.e("ALARM_DEBUG", "AlarmService: Failed to startForeground", e)
             stopSelf()
             return START_NOT_STICKY
         }
 
-        // Запускаем музыку
+        // 3. Запускаем музыку и вибрацию
         MelodyPlayer.start(this, melodyUri)
-
-        // Показываем уведомление (делаем сервис Foreground)
-        val notification = createNotification(
-            alarmId, alarmName, hour, minute, taskType, requiredShakes, requiredBarcode
-        )
-        startForeground(alarmId.toInt().coerceAtLeast(1), notification)
+        startVibration()
 
         return START_STICKY
+    }
+
+    private fun startVibration() {
+        Log.d("ALARM_DEBUG", "AlarmService: startVibration() called")
+        try {
+            vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+                vibratorManager?.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            }
+
+            val pattern = longArrayOf(0, 500, 1000) // задержка 0, вибрация 500мс, пауза 1000мс
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Log.d("ALARM_DEBUG", "AlarmService: Using VibrationEffect (API >= 26)")
+                vibrator?.vibrate(VibrationEffect.createWaveform(pattern, 0))
+            } else {
+                Log.d("ALARM_DEBUG", "AlarmService: Using classic vibrate (API < 26)")
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(pattern, 0)
+            }
+        } catch (e: Exception) {
+            Log.e("ALARM_DEBUG", "AlarmService: startVibration() failed", e)
+        }
+    }
+
+    private fun stopAlarm() {
+        Log.d("ALARM_DEBUG", "AlarmService: stopAlarm() called")
+        MelodyPlayer.stop()
+        vibrator?.cancel()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(true)
+        }
+        stopSelf()
     }
 
     private fun createNotification(
@@ -91,6 +155,11 @@ class AlarmService : Service() {
             .setFullScreenIntent(pendingIntent, true)
             .setOngoing(true)
             .build()
+    }
+
+    override fun onDestroy() {
+        vibrator?.cancel()
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
