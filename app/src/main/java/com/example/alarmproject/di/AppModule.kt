@@ -1,6 +1,7 @@
 package com.example.alarmproject.di
 
 import android.content.Context
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.alarmproject.receiver.AlarmReceiver
@@ -23,18 +24,15 @@ object AppModule {
 
     private lateinit var appContext: Context
 
-    /** Вызывать один раз из AlarmApp.onCreate(). */
     fun init(context: Context) {
         appContext = context.applicationContext
     }
 
-    // Scheduler
     private val scheduler: IAlarmScheduler by lazy {
         AndroidAlarmScheduler(appContext, AlarmReceiver::class.java)
     }
 
-    // Room
-    val repository: IAlarmRepository by lazy {
+    internal val repository: IAlarmRepository by lazy {
         DataModule.provideRepository(appContext)
     }
 
@@ -43,6 +41,7 @@ object AppModule {
     }
 
     // Use cases
+
     private val createAlarmUseCase: CreateAlarmUseCase by lazy {
         CreateAlarmUseCase(repository, scheduler)
     }
@@ -63,6 +62,12 @@ object AppModule {
         SaveScannedBarcodeUseCase(savedBarcodeRepository)
     }
 
+    fun provideShakeSensor(): IShakeSensor =
+        DataModule.provideShakeSensor(appContext)
+
+    fun provideBarcodeSensor(lifecycleOwner: LifecycleOwner): IBarcodeSensor =
+        DataModule.provideBarcodeScanner(appContext, lifecycleOwner)
+
     fun provideAlarmSetupViewModelFactory(): ViewModelProvider.Factory =
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -70,6 +75,7 @@ object AppModule {
                     @Suppress("UNCHECKED_CAST")
                     return AlarmSetupViewModel(
                         createAlarmUseCase,
+                        getAlarmsUseCase,
                         getSavedBarcodesUseCase,
                         saveScannedBarcodeUseCase
                     ) as T
@@ -81,17 +87,8 @@ object AppModule {
     fun provideAlarmListViewModelFactory(): ViewModelProvider.Factory =
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                if (modelClass.isAssignableFrom(AlarmListViewModel::class.java)) {
-                    @Suppress("UNCHECKED_CAST")
-                    return AlarmListViewModel(getAlarmsUseCase, deleteAlarmUseCase) as T
-                }
-                throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+                @Suppress("UNCHECKED_CAST")
+                return AlarmListViewModel(getAlarmsUseCase, deleteAlarmUseCase) as T
             }
         }
-
-    fun provideShakeSensor(): IShakeSensor =
-        DataModule.provideShakeSensor(appContext)
-
-    fun provideBarcodeSensor(lifecycleOwner: androidx.lifecycle.LifecycleOwner): IBarcodeSensor =
-        DataModule.provideBarcodeScanner(appContext, lifecycleOwner)
 }

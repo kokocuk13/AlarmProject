@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.core.os.bundleOf
 import androidx.navigation.fragment.NavHostFragment
 import com.example.alarmproject.R
@@ -12,14 +13,21 @@ import presentation.ui.AlarmRingingFragment
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var navHostFragment: NavHostFragment
+    companion object {
+        const val EXTRA_TASK_TYPE = "extra_task_type"
+        const val EXTRA_REQUIRED_SHAKES = "extra_required_shakes"
+        const val EXTRA_REQUIRED_BARCODE = "extra_required_barcode"
+        const val TASK_SHAKE = "shake"
+        const val TASK_BARCODE = "barcode"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.title = "AlarmApp"
 
         if (savedInstanceState == null) {
             handleAlarmIntent(intent)
@@ -33,6 +41,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleAlarmIntent(intent: Intent?) {
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
         val taskType = intent?.getStringExtra(EXTRA_TASK_TYPE) ?: return
         
@@ -57,18 +67,11 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    // Метод для вызова из фрагментов через requireActivity()
+    /**
+     * Метод для вызова из фрагментов через requireActivity()
+     */
     fun dismissAlarmNotification(alarmId: Long) {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.cancel(alarmId.toInt())
-    }
-
-    companion object {
-        const val EXTRA_TASK_TYPE = "TASK_TYPE"
-        const val EXTRA_REQUIRED_SHAKES = "REQUIRED_SHAKES"
-        const val EXTRA_REQUIRED_BARCODE = "REQUIRED_BARCODE"
-
-        const val TASK_SHAKE = "SHAKE"
-        const val TASK_BARCODE = "BARCODE"
     }
 }
