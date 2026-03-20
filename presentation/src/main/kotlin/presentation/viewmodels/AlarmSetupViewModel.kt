@@ -53,7 +53,8 @@ class AlarmSetupViewModel(
         days:     List<Int>   = emptyList(),
         taskType: String      = "SHAKE",
         barcodeValue: String? = null,
-        alarmId:  Long        = 0L
+        alarmId:  Long        = 0L,
+        melodyUri: String?    = null
     ) {
         viewModelScope.launch {
             _uiState.value = AlarmUiState.Loading
@@ -65,7 +66,8 @@ class AlarmSetupViewModel(
                     days           = days,
                     taskType       = taskType,
                     barcodeValue   = barcodeValue,
-                    alarmId        = alarmId
+                    alarmId        = alarmId,
+                    melodyUri      = melodyUri
                 )
             )
             _uiState.value = if (result.isSuccess) AlarmUiState.Success

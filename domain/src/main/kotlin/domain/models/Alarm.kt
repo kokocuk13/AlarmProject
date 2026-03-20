@@ -8,5 +8,6 @@ data class Alarm(
     val isEnabled: Boolean,
     val task: DismissTask,
     val name: String? = null,
-    val days: List<Int> = emptyList()
+    val days: List<Int> = emptyList(),
+    val melodyUri: String? = null
 )

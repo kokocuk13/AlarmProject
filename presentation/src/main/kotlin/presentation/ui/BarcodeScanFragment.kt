@@ -65,7 +65,7 @@ class BarcodeScanFragment : Fragment() {
 
     private fun startScanning() {
         statusText.text = "Камера запущена, наведите на штрих-код"
-        barcodeSensor = PresentationDependencies.provideBarcodeSensor(this)//Вид камеры
+        barcodeSensor = PresentationDependencies.provideBarcodeSensor(this)
         barcodeSensor?.start { scannedValue ->
             if (!isAdded) return@start
             requireActivity().runOnUiThread {
@@ -78,6 +78,9 @@ class BarcodeScanFragment : Fragment() {
                         findNavController().previousBackStackEntry?.destination?.id == R.id.alarmSetupFragment
 
                     if (!launchedFromSetup && alarmId != -1L) {
+                        // Останавливаем сервис через делегат
+                        PresentationDependencies.stopAlarmService?.invoke()
+
                         val notificationManager =
                             requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                         notificationManager.cancel(alarmId.toInt())
@@ -105,6 +108,6 @@ class BarcodeScanFragment : Fragment() {
 
     companion object {
         const val ARG_REQUIRED_BARCODE = "required_barcode"
-        const val RESULT_SCANNED_BARCODE = "result_scanned_barcode" // Ключ для передачи отсканированного штрих-кода обратно в AlarmRingingFragment, это нужно когда мы хотим, чтобы пользователь мог отсканировать любой штрих-код для отключения будильника, а не только заранее заданный. В этом случае мы будем передавать отсканированный код обратно в AlarmRingingFragment, чтобы он мог его обработать и отключить будильник.
+        const val RESULT_SCANNED_BARCODE = "result_scanned_barcode"
     }
 }

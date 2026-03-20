@@ -14,7 +14,8 @@ data class CreateAlarmParams(
     val days: List<Int> = emptyList(),
     val taskType: String = "SHAKE",
     val barcodeValue: String? = null,
-    val alarmId: Long = 0L
+    val alarmId: Long = 0L,
+    val melodyUri: String? = null
 )
 
 class CreateAlarmUseCase(
@@ -34,7 +35,8 @@ class CreateAlarmUseCase(
             isEnabled = true,
             task = task,
             name = params.name,
-            days = params.days
+            days = params.days,
+            melodyUri = params.melodyUri
         )
 
         val saveResult = repository.saveAlarm(alarm)

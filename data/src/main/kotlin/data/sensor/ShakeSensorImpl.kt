@@ -38,7 +38,7 @@ class ShakeSensorImpl(
         val acceleration = sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH
 
         // В Android studio стоит делать 10-8 тк ну оч сложно, на телефоне 20 - ок
-        if (acceleration > 20f) {
+        if (acceleration > 5f) {
             lastTime = now
             onShake?.invoke()
         }

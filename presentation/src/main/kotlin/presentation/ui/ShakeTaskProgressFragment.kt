@@ -71,6 +71,9 @@ class ShakeTaskProgressFragment : Fragment() {
 
     private fun completeTask() {
         shakeSensor?.stop()
+        
+        // Останавливаем сервис через делегат, чтобы избежать прямой зависимости между модулями
+        PresentationDependencies.stopAlarmService?.invoke()
 
         if (alarmId != -1L) {
             val notificationManager = 

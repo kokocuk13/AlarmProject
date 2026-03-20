@@ -20,5 +20,6 @@ data class AlarmEntity(
     val requiredShakes: Int,
     val taskType: String = "SHAKE",
     val requiredBarcode: String? = null,
-    val days: String = ""
+    val days: String = "",
+    val melodyUri: String? = null
 )

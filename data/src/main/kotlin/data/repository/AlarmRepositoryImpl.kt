@@ -62,7 +62,8 @@ class AlarmRepositoryImpl(private val dao: AlarmDao) : IAlarmRepository {
             else -> "SHAKE"
         },
         requiredBarcode = (task as? BarcodeTask)?.requiredBarcode,
-        days = days.joinToString(",")
+        days = days.joinToString(","),
+        melodyUri = melodyUri
     )
 
     private fun AlarmEntity.toDomain(): Alarm {
@@ -81,7 +82,8 @@ class AlarmRepositoryImpl(private val dao: AlarmDao) : IAlarmRepository {
             isEnabled = isEnabled,
             task = task,
             name = name,
-            days = parsedDays
+            days = parsedDays,
+            melodyUri = melodyUri
         )
     }
 }
