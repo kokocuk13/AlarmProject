@@ -21,8 +21,6 @@ class AndroidAlarmScheduler(
         context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     override fun schedule(alarm: Alarm) {
-        val now = Calendar.getInstance()
-
         val pendingIntent = buildPendingIntent(alarm, PendingIntent.FLAG_UPDATE_CURRENT)
         val calendar = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, alarm.time.hour)
@@ -30,6 +28,8 @@ class AndroidAlarmScheduler(
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
 
+            // Если время уже прошло (даже если та же минута, но секунды уже ушли вперед),
+            // планируем на следующий день.
             if (timeInMillis <= System.currentTimeMillis()) {
                 add(Calendar.DAY_OF_MONTH, 1)
                 Log.d("ALARM_DEBUG", "Target time already passed today. Scheduled for tomorrow.")
