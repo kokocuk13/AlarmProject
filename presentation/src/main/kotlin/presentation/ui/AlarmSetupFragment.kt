@@ -43,6 +43,8 @@ class AlarmSetupFragment : Fragment() {
     private val selectedDays = mutableSetOf<Int>()
     private var editingAlarmId = -1L
     private var dataLoaded = false
+    private var draftHour: Int? = null
+    private var draftMinute: Int? = null
 
     private val melodyPickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -69,6 +71,7 @@ class AlarmSetupFragment : Fragment() {
         val shakeCard      = view.findViewById<LinearLayout>(R.id.shakeCard)
         val barcodeCard    = view.findViewById<LinearLayout>(R.id.barcodeCard)
         val shakeContainer = view.findViewById<LinearLayout>(R.id.shakeCountContainer)
+        val barcodeControlsContainer = view.findViewById<LinearLayout>(R.id.barcodeControlsContainer)
         val seekBar        = view.findViewById<SeekBar>(R.id.shakeCountSeekBar)
         val nameInput      = view.findViewById<EditText>(R.id.alarmNameInput)
         val saveButton     = view.findViewById<Button>(R.id.saveButton)
@@ -83,6 +86,9 @@ class AlarmSetupFragment : Fragment() {
         minutePicker.minValue = 0; minutePicker.maxValue = 59
         seekBar.min = 1; seekBar.max = 50; seekBar.progress = 20
 
+        hourPicker.setOnValueChangedListener { _, _, newVal -> draftHour = newVal }
+        minutePicker.setOnValueChangedListener { _, _, newVal -> draftMinute = newVal }
+
         if (editingAlarmId != -1L && !dataLoaded) {
             viewLifecycleOwner.lifecycleScope.launch {
                 val alarm = viewModel.loadAlarm(editingAlarmId)
@@ -90,6 +96,8 @@ class AlarmSetupFragment : Fragment() {
                     dataLoaded = true
                     hourPicker.value = alarm.time.hour
                     minutePicker.value = alarm.time.minute
+                    draftHour = alarm.time.hour
+                    draftMinute = alarm.time.minute
                     if (!alarm.name.isNullOrBlank()) nameInput.setText(alarm.name)
                     selectedDays.clear()
                     selectedDays.addAll(alarm.days)
@@ -99,29 +107,55 @@ class AlarmSetupFragment : Fragment() {
                     when (task) {
                         is BarcodeTask -> {
                             isShakeSelected = false
-                            shakeContainer.visibility = View.GONE
                             selectedBarcodeValue = task.requiredBarcode
                             view.findViewById<TextView>(R.id.selectedBarcodeText).text = selectedBarcodeValue
                         }
                         is ShakeTask -> {
                             isShakeSelected = true
-                            shakeContainer.visibility = View.VISIBLE
                             seekBar.progress = task.requiredShakes.coerceIn(1, 50)
                         }
                         else -> {}
                     }
                 }
                 updateDayButtons(dayButtons)
-                updateDismissCards(shakeCard, barcodeCard)
+                applyDismissMethodUi(
+                    shakeCard = shakeCard,
+                    barcodeCard = barcodeCard,
+                    shakeContainer = shakeContainer,
+                    barcodeControlsContainer = barcodeControlsContainer
+                )
+                selectedBarcodeValue?.let { code ->
+                    view.findViewById<TextView>(R.id.selectedBarcodeText).text = code
+                }
             }
+        } else if (draftHour != null && draftMinute != null) {
+            hourPicker.value = draftHour!!
+            minutePicker.value = draftMinute!!
+            updateDayButtons(dayButtons)
+            applyDismissMethodUi(
+                shakeCard = shakeCard,
+                barcodeCard = barcodeCard,
+                shakeContainer = shakeContainer,
+                barcodeControlsContainer = barcodeControlsContainer
+            )
+            selectedBarcodeValue?.let { code ->
+                view.findViewById<TextView>(R.id.selectedBarcodeText).text = code
+            }
+            updateMelodyText()
         } else if (!dataLoaded) {
             val now = LocalTime.now()
             hourPicker.value = now.hour
             minutePicker.value = now.minute
+            draftHour = now.hour
+            draftMinute = now.minute
             selectedDays.add(java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_WEEK) - 1)
             updateDayButtons(dayButtons)
-            shakeContainer.visibility = View.VISIBLE
-            updateDismissCards(shakeCard, barcodeCard)
+            applyDismissMethodUi(
+                shakeCard = shakeCard,
+                barcodeCard = barcodeCard,
+                shakeContainer = shakeContainer,
+                barcodeControlsContainer = barcodeControlsContainer
+            )
             // По умолчанию ставим стандартную мелодию будильника
             selectedMelodyUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM).toString()
             updateMelodyText()
@@ -135,21 +169,16 @@ class AlarmSetupFragment : Fragment() {
             }
         }
 
-        val barcodeControlsContainer = view.findViewById<LinearLayout>(R.id.barcodeControlsContainer)
         val scanBarcodeButton = view.findViewById<Button>(R.id.scanBarcodeButton)
         val selectedBarcodeText = view.findViewById<TextView>(R.id.selectedBarcodeText)
 
         shakeCard.setOnClickListener {
             isShakeSelected = true
-            updateDismissCards(shakeCard, barcodeCard)
-            shakeContainer.visibility = View.VISIBLE
-            barcodeControlsContainer.visibility = View.GONE
+            applyDismissMethodUi(shakeCard, barcodeCard, shakeContainer, barcodeControlsContainer)
         }
         barcodeCard.setOnClickListener {
             isShakeSelected = false
-            updateDismissCards(shakeCard, barcodeCard)
-            shakeContainer.visibility = View.GONE
-            barcodeControlsContainer.visibility = View.VISIBLE
+            applyDismissMethodUi(shakeCard, barcodeCard, shakeContainer, barcodeControlsContainer)
         }
 
         scanBarcodeButton.setOnClickListener {
@@ -167,6 +196,8 @@ class AlarmSetupFragment : Fragment() {
                 if (scannedCode.isNullOrBlank()) return@observe
                 selectedBarcodeValue = scannedCode
                 selectedBarcodeText.text = scannedCode
+                isShakeSelected = false
+                applyDismissMethodUi(shakeCard, barcodeCard, shakeContainer, barcodeControlsContainer)
                 viewModel.saveScannedBarcode(scannedCode)
                 findNavController().currentBackStackEntry
                     ?.savedStateHandle
@@ -274,5 +305,16 @@ class AlarmSetupFragment : Fragment() {
         barcodeCard.setBackgroundResource(
             if (isShakeSelected) R.drawable.dismiss_card_normal else R.drawable.dismiss_card_selected
         )
+    }
+
+    private fun applyDismissMethodUi(
+        shakeCard: LinearLayout,
+        barcodeCard: LinearLayout,
+        shakeContainer: LinearLayout,
+        barcodeControlsContainer: LinearLayout
+    ) {
+        updateDismissCards(shakeCard, barcodeCard)
+        shakeContainer.visibility = if (isShakeSelected) View.VISIBLE else View.GONE
+        barcodeControlsContainer.visibility = if (isShakeSelected) View.GONE else View.VISIBLE
     }
 }
